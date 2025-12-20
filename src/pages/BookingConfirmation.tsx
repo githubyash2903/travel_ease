@@ -175,7 +175,7 @@ export default function BookingConfirmation() {
                       </Link>
                     </Button>
                     <Button variant="outline" asChild>
-                      <Link to="/dashboard">
+                      <Link to="/profile">
                         View My Bookings
                       </Link>
                     </Button>
@@ -206,7 +206,7 @@ export default function BookingConfirmation() {
                 <Link to="/">Return to Home</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/dashboard">My Dashboard</Link>
+                <Link to="/profile">My Dashboard</Link>
               </Button>
             </div>
           </div>

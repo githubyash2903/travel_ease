@@ -18,22 +18,28 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Plane, Menu } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
+import { useProfileData } from "@/hooks/useProfile";
+import { Skeleton } from "../ui/skeleton";
 
 export const Header = () => {
-  const { user, logout } = useAuth();    // ✅ FIXED (was currentUser)
+  const { isAuthenticated } = useAuth();
+
+  const { data: user, isLoading } = useProfileData({
+    enabled: isAuthenticated,
+  });
+  console.log(isLoading,user)
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await logout();
       navigate("/");
     } catch (error) {
       console.error("Failed to log out", error);
     }
   };
 
-  const getInitials = () => {
+  const getInitials = (user:any) => {
     if (user?.name) {
       return user.name.substring(0, 2).toUpperCase();
     }
@@ -45,8 +51,7 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <nav className="max-w-5xl px-4 mx-auto flex h-16 items-center justify-between">
-        
+      <nav className="container px-4 mx-auto flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-bold text-xl">
           <div className="p-2 rounded-lg bg-blue-400">
@@ -59,24 +64,40 @@ export const Header = () => {
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center gap-6">
-          <Link to="/flights" className="text-sm hover:shadow-md">Flights</Link>
-          <Link to="/hotels" className="text-sm hover:shadow-md">Hotels</Link>
-          <Link to="/holidays" className="text-sm hover:shadow-md">Holidays</Link>
-          <Link to="/buses" className="text-sm hover:shadow-md">Buses</Link>
-          <Link to="/offers" className="text-sm hover:shadow-md">Offers</Link>
-          <Link to="/blogs" className="text-sm hover:shadow-md">Blogs</Link>
-          <Link to="/contact" className="text-sm hover:shadow-md">Contact</Link>
+          <Link to="/flights" className="text-sm hover:shadow-md">
+            Flights
+          </Link>
+          <Link to="/hotels" className="text-sm hover:shadow-md">
+            Hotels
+          </Link>
+          <Link to="/holidays" className="text-sm hover:shadow-md">
+            Holidays
+          </Link>
+          <Link to="/buses" className="text-sm hover:shadow-md">
+            Buses
+          </Link>
+          <Link to="/offers" className="text-sm hover:shadow-md">
+            Offers
+          </Link>
+          <Link to="/blogs" className="text-sm hover:shadow-md">
+            Blogs
+          </Link>
+          <Link to="/contact" className="text-sm hover:shadow-md">
+            Contact
+          </Link>
         </div>
 
         {/* Auth Section */}
         <div className="flex items-center gap-4">
-          {user ? (
+          {isLoading?
+          <Skeleton className="h-12 w-30% rounded-md"/>:
+          user ? (
             // LOGGED IN USER
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <Avatar>
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getInitials()}
+                    {getInitials(user)}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
@@ -86,12 +107,12 @@ export const Header = () => {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem asChild>
-                  <Link to="/dashboard">Dashboard</Link>
+                  <Link to="/profile">Profile</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/my-bookings">My Bookings</Link>
+                  <Link to="/profile/bookings">My Bookings</Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem onClick={handleLogout}>
                   Logout
                 </DropdownMenuItem>
@@ -103,7 +124,11 @@ export const Header = () => {
               <Button variant="ghost" className="hidden md:inline-flex" asChild>
                 <Link to="/auth">Login</Link>
               </Button>
-              <Button variant="ghost" className="border-1 border-blue-400" asChild>
+              <Button
+                variant="ghost"
+                className="border border-blue-400"
+                asChild
+              >
                 <Link to="/auth">Sign Up</Link>
               </Button>
             </>
@@ -121,13 +146,27 @@ export const Header = () => {
                 <SheetTitle>Menu</SheetTitle>
                 <SheetDescription>
                   <div className="flex flex-col gap-4">
-                    <Link to="/flights" className="text-sm hover:shadow-md">Flights</Link>
-                    <Link to="/hotels" className="text-sm hover:shadow-md">Hotels</Link>
-                    <Link to="/holidays" className="text-sm hover:shadow-md">Holidays</Link>
-                    <Link to="/buses" className="text-sm hover:shadow-md">Buses</Link>
-                    <Link to="/offers" className="text-sm hover:shadow-md">Offers</Link>
-                    <Link to="/blogs" className="text-sm hover:shadow-md">Blogs</Link>
-                    <Link to="/contact" className="text-sm hover:shadow-md">Contact</Link>
+                    <Link to="/flights" className="text-sm hover:shadow-md">
+                      Flights
+                    </Link>
+                    <Link to="/hotels" className="text-sm hover:shadow-md">
+                      Hotels
+                    </Link>
+                    <Link to="/holidays" className="text-sm hover:shadow-md">
+                      Holidays
+                    </Link>
+                    <Link to="/buses" className="text-sm hover:shadow-md">
+                      Buses
+                    </Link>
+                    <Link to="/offers" className="text-sm hover:shadow-md">
+                      Offers
+                    </Link>
+                    <Link to="/blogs" className="text-sm hover:shadow-md">
+                      Blogs
+                    </Link>
+                    <Link to="/contact" className="text-sm hover:shadow-md">
+                      Contact
+                    </Link>
                   </div>
                 </SheetDescription>
               </SheetHeader>

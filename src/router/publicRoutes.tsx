@@ -9,10 +9,8 @@ import Flights from "./Flights";
 import Holidays from "./Holidays";
 import Offers from "./Offers";
 import Support from "./Support";
-import Auth from "./Auth";
 import Account from "./Account";
 import PrivacyRoute from "./Privacy";
-import Dashboard from "./Dashboard";
 import Blogs from "./Blogs";
 import Buses from "./Buses";
 import Contact from "./Contact";
@@ -21,7 +19,6 @@ import FAQs from "./FAQs";
 import BookingConfirmation from "./BookingConfirmation";
 import Checkout from "./Checkout";
 import Payment from "./Payment";
-import Profile from "./Profile";
 import HotelCheckout from "./hotelCheckout";
 
 const publicRoutes: RouteObject[] = [
@@ -33,10 +30,8 @@ const publicRoutes: RouteObject[] = [
   Holidays,
   Offers,
   Support,
-  Auth,
   Account,
   PrivacyRoute,
-  Dashboard,
   Blogs,
   Buses,
   Contact,
@@ -45,7 +40,6 @@ const publicRoutes: RouteObject[] = [
   BookingConfirmation,
   Checkout,
   Payment,
-  Profile,
   HotelCheckout,
 ];
 

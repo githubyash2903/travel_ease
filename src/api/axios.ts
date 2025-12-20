@@ -4,7 +4,7 @@ import axios from "axios";
 // ========================
 // Base Config
 // ========================
-const BASE_URL = "https://4zj38hkf-5100.inc1.devtunnels.ms/api";
+const BASE_URL = "http://localhost:4000/api/v1";
 
 // ========================
 // Public Client

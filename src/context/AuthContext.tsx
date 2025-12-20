@@ -1,51 +1,37 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { loginUser, registerUser, logoutUser } from "@/api/auth";
+import { createContext, useContext, useMemo, useCallback } from "react";
+import { authStorage } from "@/utils/auth";
+
+type Role = "admin" | "user" | null;
 
 interface AuthContextType {
-  user: any;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (payload: any) => Promise<void>;
+  isAuthenticated: boolean;
+  role: Role;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const isAuthenticated = authStorage.isAuthenticated();
+  const role = authStorage.getRole();
 
-  /* ---------------- LOAD USER FROM STORAGE ---------------- */
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+  const logout = useCallback(() => {
+    authStorage.clear();
   }, []);
 
-  /* ---------------- LOGIN ---------------- */
-  const login = async (email: string, password: string) => {
-    const userData = await loginUser({ email, password });
-    setUser(userData);
-  };
-
-  /* ---------------- SIGNUP ---------------- */
-  const signup = async (payload: any) => {
-    const userData = await registerUser(payload);
-    setUser(userData);
-  };
-
-  /* ---------------- LOGOUT ---------------- */
-  const logout = () => {
-    logoutUser();
-    setUser(null);
-  };
+  const value = useMemo(
+    () => ({ isAuthenticated, role, logout }),
+    [isAuthenticated, role, logout]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");

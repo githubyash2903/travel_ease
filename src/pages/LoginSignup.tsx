@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback, type ChangeEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,96 +12,176 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLoginUser, useRegisterUser } from "@/hooks/useAuth";
+import { toast } from "react-toastify";
+
+type TabType = "login" | "signup";
+
+interface FormState {
+  loginEmail: string;
+  loginPassword: string;
+  name: string;
+  email: string;
+  countryCode: string;
+  phoneNo: string;
+  password: string;
+}
+
+const INITIAL_FORM: FormState = {
+  loginEmail: "",
+  loginPassword: "",
+  name: "",
+  email: "",
+  countryCode: "+91",
+  phoneNo: "",
+  password: "",
+};
 
 export const LoginSignup = () => {
-  /* ---------------- LOGIN STATES ---------------- */
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<TabType>("login");
+  const [form, setForm] = useState<FormState>(INITIAL_FORM);
+  const [error, setError] = useState<string>("");
 
-  /* ---------------- SIGNUP STATES ---------------- */
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
-  const [phoneNo, setPhoneNo] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [error, setError] = useState("");
-
-  const { login, signup ,user } = useAuth();
+  const loginMutation = useLoginUser();
+  const registerMutation = useRegisterUser();
   const navigate = useNavigate();
 
-  /* ---------------- LOGIN HANDLER ---------------- */
-  const handleLogin = async (e: React.FormEvent) => {
+  const isSubmitting =
+    loginMutation.isPending || registerMutation.isPending;
+
+  /* ---------------- INPUT HANDLER ---------------- */
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      setForm((prev) => ({ ...prev, [name]: value }));
+      setError("");
+    },
+    []
+  );
+
+  /* ---------------- VALIDATIONS ---------------- */
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const isStrongPassword = (password: string) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(password);
+
+  /* ---------------- LOGIN ---------------- */
+  const handleLogin = (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
-    try {
+    const { loginEmail, loginPassword } = form;
 
-      await login(loginEmail, loginPassword);
-       if(user.role==="admin"){
-        navigate("/admin");
-        return
-       }
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid email or password");
+    if (!loginEmail || !loginPassword) {
+      setError("Email and password are required");
+      return;
     }
+
+    loginMutation.mutate(
+      { email: loginEmail, password: loginPassword },
+      {
+        onSuccess: (res) => {
+          const data = res?.data?.data;
+          toast.success(res?.data?.message);
+          localStorage.setItem("token", data?.token);
+          localStorage.setItem("role", data?.role?.toLowerCase());
+          navigate(
+            data?.role?.toLowerCase() === "admin"
+              ? "/admin"
+              : "/profile"
+          );
+        },
+        onError: (err: any) => {
+          setError(err?.message || "Login failed");
+        },
+      }
+    );
   };
 
-  /* ---------------- SIGNUP HANDLER ---------------- */
-  const handleSignup = async (e: React.FormEvent) => {
+  /* ---------------- SIGNUP ---------------- */
+  const handleSignup = (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!name || !email || !phoneNo || !countryCode || !password) {
+    const { name, email, phoneNo, countryCode, password } = form;
+
+    if (!name || !email || !phoneNo || !password) {
       setError("All fields are required");
       return;
     }
 
-    try {
-      await signup({
+    if (!isValidEmail(email)) {
+      setError("Invalid email address");
+      return;
+    }
+
+    if (!isStrongPassword(password)) {
+      setError(
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
+      );
+      return;
+    }
+
+    registerMutation.mutate(
+      {
         name,
         email,
-        phone_no: phoneNo,
-        country_code: countryCode,
+        phoneNumber: phoneNo,
+        phoneCountryCode: countryCode,
         password,
-      });
-
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Signup failed");
-    }
+      },
+      {
+        onSuccess: (res) => {
+          toast.success(res?.data?.message);
+          setActiveTab("login");
+          setForm((prev) => ({
+            ...prev,
+            loginEmail: email,
+            loginPassword: "",
+            password: "",
+          }));
+        },
+        onError: (err: any) => {
+          setError(err?.message || "Registration failed");
+        },
+      }
+    );
   };
-  
 
   return (
-    <div className="flex items-center w-screen justify-center py-12 px-4 min-h-[calc(100vh-8rem)]">
-      <Tabs defaultValue="login" className="w-full max-w-md">
-        <TabsList className="grid w-full grid-cols-2">
+    <div className="flex items-center justify-center w-screen min-h-[calc(100vh-8rem)] px-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          setActiveTab(v as TabType);
+          setError("");
+        }}
+        className="w-full max-w-md"
+      >
+        <TabsList className="grid grid-cols-2 w-full">
           <TabsTrigger value="login">Login</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
         </TabsList>
 
-        {/* ---------------- LOGIN ---------------- */}
+        {/* LOGIN */}
         <TabsContent value="login">
           <Card>
             <form onSubmit={handleLogin}>
               <CardHeader className="text-center">
                 <CardTitle>Login</CardTitle>
-                <CardDescription>
-                  Welcome back! Access your TravelEase account.
-                </CardDescription>
+                <CardDescription>Welcome back to TravelEase</CardDescription>
               </CardHeader>
-            
-              <CardContent className="space-y-4">
-                {error && <p className="text-red-500 text-sm">{error}</p>}
 
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Email</Label>
                   <Input
-                    type="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    name="loginEmail"
+                    value={form.loginEmail}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    autoComplete="email"
                   />
                 </div>
 
@@ -110,63 +189,79 @@ export const LoginSignup = () => {
                   <Label>Password</Label>
                   <Input
                     type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
+                    name="loginPassword"
+                    value={form.loginPassword}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                    autoComplete="current-password"
                   />
                 </div>
+
+                {error && (
+                  <p className="text-sm text-red-500 text-center">{error}</p>
+                )}
               </CardContent>
 
-              <CardFooter>
-                <Button type="submit" className="w-full my-4 bg-blue-400">
-                  Login
+              <CardFooter className="mt-4">
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-500"
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>
               </CardFooter>
             </form>
           </Card>
         </TabsContent>
 
-        {/* ---------------- SIGNUP ---------------- */}
+        {/* SIGNUP */}
         <TabsContent value="signup">
           <Card>
             <form onSubmit={handleSignup}>
               <CardHeader className="text-center">
                 <CardTitle>Sign Up</CardTitle>
-                <CardDescription>
-                  Create your TravelEase account
-                </CardDescription>
+                <CardDescription>Create your TravelEase account</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {error && <p className="text-red-500 text-sm">{error}</p>}
-
                 <div className="space-y-2">
                   <Label>Name</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} />
+                  <Input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Email</Label>
                   <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
                   />
                 </div>
 
                 <div className="flex gap-2">
-                  <div className="w-1/3 space-y-2">
+                  <div className="space-y-2 w-1/3">
                     <Label>Code</Label>
                     <Input
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
+                      name="countryCode"
+                      value={form.countryCode}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
                     />
                   </div>
-
-                  <div className="w-2/3 space-y-2">
+                  <div className="space-y-2 w-2/3">
                     <Label>Phone</Label>
                     <Input
-                      value={phoneNo}
-                      onChange={(e) => setPhoneNo(e.target.value)}
+                      name="phoneNo"
+                      value={form.phoneNo}
+                      onChange={handleChange}
+                      disabled={isSubmitting}
                     />
                   </div>
                 </div>
@@ -175,15 +270,27 @@ export const LoginSignup = () => {
                   <Label>Password</Label>
                   <Input
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    disabled={isSubmitting}
                   />
                 </div>
+
+                {error && (
+                  <p className="text-sm text-red-500 text-center">{error}</p>
+                )}
               </CardContent>
 
-              <CardFooter>
-                <Button type="submit" className="w-full my-4 bg-blue-400">
-                  Create Account
+              <CardFooter className="mt-4">
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-500"
+                  disabled={registerMutation.isPending}
+                >
+                  {registerMutation.isPending
+                    ? "Creating account..."
+                    : "Create Account"}
                 </Button>
               </CardFooter>
             </form>

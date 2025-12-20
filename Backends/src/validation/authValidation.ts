@@ -32,7 +32,7 @@ export const registerSchema = Joi.object({
       "string.pattern.base": "Phone number must be a valid 10-digit number",
       "any.required": "Phone number is required",
     }),
-    country_code: Joi.string()
+  country_code: Joi.string()
     .pattern(new RegExp("^[+][0-9]{1,3}$"))
     .required()
     .messages({

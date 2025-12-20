@@ -31,7 +31,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 
 
 const navItems = [
@@ -109,7 +108,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function AdminSidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
-  const { logout } = useAuth();
 
   const handlesetting = () => {
     navigate("/admin/settings");

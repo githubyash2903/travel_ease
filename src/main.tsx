@@ -1,54 +1,23 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import NotFound from "@/pages/NotFound";
-import { AuthProvider } from '@/context/AuthContext';
-import AppProvider from './provider/AppProvider';
-import { ToastContainer } from 'react-toastify';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+
+import "./index.css";
+import { AuthProvider } from "@/context/AuthContext";
+import AppProvider from "./provider/AppProvider";
 import "react-toastify/dist/ReactToastify.css";
-import AppLayout from '@/components/layout/AppLayout';
-import AdminLayout from './components/layout/AdminLayout';
-import publicRoutes from './routes/publicRoutes';
-import adminRoutes from './routes/adminRoutes';
+import { router } from "./router";
 
-const router = createBrowserRouter([
-   {
-  
-    element: <AppLayout />,
-    errorElement: <NotFound />,
-    children: publicRoutes,
-  },
-  {
-    path: "/admin",
-    element: <AdminLayout />,
-    children: adminRoutes,
-  },
-]);
+const container = document.getElementById("root") as HTMLElement;
 
-
-const container = document.getElementById('root') as HTMLElement;
-const root = createRoot(container);
-
-root.render(
+createRoot(container).render(
   <StrictMode>
     <AuthProvider>
       <AppProvider>
-       <ToastContainer
-position="bottom-right"
-autoClose={3000}
-hideProgressBar={false}
-newestOnTop={false}
-closeOnClick={false}
-rtl={false}
-pauseOnFocusLoss
-draggable
-pauseOnHover
-theme="light"
-// transition={Bounce}
-/>
+        <ToastContainer position="bottom-right" autoClose={3000} />
         <RouterProvider router={router} />
       </AppProvider>
     </AuthProvider>
-  </StrictMode>,
+  </StrictMode>
 );

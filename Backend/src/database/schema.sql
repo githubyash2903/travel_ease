@@ -140,13 +140,6 @@ ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
 
 -- BUS BOOKING DETAILS
 
-CREATE TABLE IF NOT EXISTS bus_bookings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    booking_id UUID UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
-    bus_id UUID REFERENCES buses(id),
-    seat_id UUID REFERENCES bus_seats(id)
-);
-
 -- PACKAGE BOOKING DETAILS
 
 CREATE TABLE IF NOT EXISTS package_bookings (

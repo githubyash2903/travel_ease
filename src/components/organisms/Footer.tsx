@@ -24,7 +24,7 @@ export const Footer = () => {
   const phone = settings?.contact_no || "+91 1800-123-4567";
 
   return (
-    <footer className="bg-foreground text-background py-4 px-8">
+    <footer className="bg-foreground text-background py-4 px-8 flex justify-center">
       <div className="container">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
           <div>

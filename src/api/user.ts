@@ -1,5 +1,13 @@
-// src/api/user.ts
 import { authClient } from "@/api/axios";
+
+export const getProfile = async () => {
+  return await authClient.get("/user/profile");
+};
+
+export const updateProfile = async (payload: any) => {
+  return await authClient.put("/user/profile", payload);
+};
+
 
 /* ----------------------------------
    GET MY PROFILE
@@ -14,7 +22,10 @@ export const getMyProfile = async () => {
    UPDATE MY PROFILE
    ⚠️ EMAIL NOT SENT (frontend-only fix)
 ---------------------------------- */
-export const updateMyProfile = async (payload: { name: string , phone_no : number }) => {
+export const updateMyProfile = async (payload: {
+  name: string;
+  phone_no: number;
+}) => {
   const res = await authClient.post("/user/update-profile", payload);
   return res.data.data ?? payload;
 };
