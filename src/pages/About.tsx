@@ -131,10 +131,10 @@ const About = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-blue-400 text-white">
+      <section className="py-20 md:py-32 bg-primary ">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready for Your Next Adventure?</h2>
-          <p className="text-lg text-blue-100 max-w-2xl mx-auto mb-8">
+          <h2 className="text-3xl font-bold mb-6 text-white">Ready for Your Next Adventure?</h2>
+          <p className="text-lg max-w-2xl mx-auto mb-8 text-white">
             Let our experts plan the trip of a lifetime for you. Browse our top destinations or get in touch for a custom quote.
           </p>
           <Button size="lg" variant="outline" asChild>
