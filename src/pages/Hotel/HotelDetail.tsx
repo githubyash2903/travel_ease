@@ -65,14 +65,14 @@ export default function HotelDetail() {
                 className="w-full h-[400px] md:h-[500px] object-cover rounded-lg"
               />
             </div>
-            {hotel?.images.slice(1, 4).map((image, index) => (
+            {hotel?.images.slice(0, 3).map((image, index) => (
               <div
                 key={index}
                 className="hidden md:block cursor-pointer"
                 onClick={() => setSelectedImage(index + 1)}
               >
                 <img
-                  src={image}
+                  src={image?.url}
                   alt={`${hotel?.name} ${index + 2}`}
                   className="w-full h-[160px] object-cover rounded-lg hover:opacity-80 transition-opacity"
                 />

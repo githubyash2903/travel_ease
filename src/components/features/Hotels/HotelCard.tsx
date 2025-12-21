@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Wifi, Coffee, UtensilsCrossed, Car, Building } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 
 interface HotelCardProps {
   id: string;
@@ -13,8 +14,8 @@ interface HotelCardProps {
   rating_count: number;
 
   min_price_per_night: number;
-  image: string;
-  amenities: string[];
+  images: any[];
+  amenities: any[];
   discount?: number;
 }
 
@@ -26,7 +27,7 @@ export const HotelCard = ({
   rating,
   rating_count,
   min_price_per_night,
-  image,
+  images,
   amenities,
   discount,
 }: HotelCardProps) => {
@@ -38,12 +39,15 @@ export const HotelCard = ({
     conference_room: MapPin,
     parking: Car,
   };
-  console.log(amenities);
+
+  const primaryImage= useMemo(()=>{
+    return images?.find((img:any)=>img.is_primary)?.url
+  },[images])
   return (
     <Card className="overflow-hidden hover:shadow-elegant transition-all duration-300">
       <div className="flex flex-col md:flex-row">
         <div className="md:w-1/3 h-48 md:h-auto relative">
-          <img src={'https://r1imghtlak.mmtcdn.com/16a8d3c6cfab11ed9c3c0a58a9feac02.png?downsize=810:*'} alt={name} className="w-full h-full object-cover" />
+          <img src={primaryImage} alt={name} className="w-full h-full object-cover" />
           {discount && (
             <Badge className="absolute top-3 right-3 bg-accent text-white">
               {discount}% OFF
