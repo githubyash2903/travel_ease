@@ -41,17 +41,88 @@ export async function createFlight(data: any) {
  * List Flights (Admin)
  */
 export async function listFlights(query: any) {
-  const type: 'all' | 'inactive' | undefined =
-    typeof query.type === 'string' ? query.type.toLowerCase() : undefined;
-
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 100, 1), 100);
   const offset = (page - 1) * limit;
 
-  let whereClause = 'WHERE is_active = true';
+  const clauses: string[] = [];
+  const values: any[] = [];
+  let i = 1;
 
-  if (type === 'all') whereClause = '';
-  if (type === 'inactive') whereClause = 'WHERE is_active = false';
+  clauses.push(`is_active = true`);
+console.log(query,'query')
+  // Stops
+  if (query.stops) {
+    clauses.push(`stops = ANY($${i++})`);
+    values.push([].concat(query.stops).map(Number));
+  }
+
+  // Airlines
+  if (query.airlines) {
+    clauses.push(`airline = ANY($${i++})`);
+    values.push([].concat(query.airlines));
+  }
+
+  // Source, Destination. Case-insensitive.
+  if (query.source) {
+    clauses.push(`LOWER(source) = LOWER($${i++})`);
+    values.push(String(query.source));
+  }
+
+  if (query.destination) {
+    clauses.push(`LOWER(destination) = LOWER($${i++})`);
+    values.push(String(query.destination));
+  }
+
+  // Price
+  if (query.minPrice) {
+    clauses.push(`price >= $${i++}`);
+    values.push(Number(query.minPrice));
+  }
+
+  if (query.maxPrice) {
+    clauses.push(`price <= $${i++}`);
+    values.push(Number(query.maxPrice));
+  }
+
+  // Departure time buckets
+  if (query.depTime) {
+    const buckets = [].concat(query.depTime);
+    const ranges: string[] = [];
+
+    buckets.forEach((b: string) => {
+      if (b === "morning") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 6 AND 11`);
+      if (b === "afternoon") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 12 AND 17`);
+      if (b === "evening") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 18 AND 23`);
+      if (b === "night") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 0 AND 5`);
+    });
+
+    if (ranges.length) clauses.push(`(${ranges.join(" OR ")})`);
+  }
+
+  // Departure date range
+  if (query.departureFrom) {
+    clauses.push(`departure >= $${i++}`);
+    values.push(new Date(query.departureFrom));
+  }
+
+  if (query.departureTo) {
+    clauses.push(`departure <= $${i++}`);
+    values.push(new Date(query.departureTo));
+  }
+
+  // Arrival date range
+  if (query.arrivalFrom) {
+    clauses.push(`arrival >= $${i++}`);
+    values.push(new Date(query.arrivalFrom));
+  }
+
+  if (query.arrivalTo) {
+    clauses.push(`arrival <= $${i++}`);
+    values.push(new Date(query.arrivalTo));
+  }
+
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
 
   const sql = `
     SELECT
@@ -63,17 +134,16 @@ export async function listFlights(query: any) {
       arrival,
       total_seats,
       price::float8 AS price,
-      stops,
-      is_active,
-      created_at,
-      updated_at
+      stops
     FROM flights
-    ${whereClause}
+    ${where}
     ORDER BY departure ASC
-    LIMIT $1 OFFSET $2
+    LIMIT $${i++} OFFSET $${i}
   `;
 
-  const { rows } = await pool.query(sql, [limit, offset]);
+  values.push(limit, offset);
+
+  const { rows } = await pool.query(sql, values);
   return rows;
 }
 

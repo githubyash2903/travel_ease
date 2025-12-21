@@ -1,5 +1,5 @@
-import pool from '../../database/db';
-import { AppError } from '../../utils/errors';
+import pool from "../../database/db";
+import { AppError } from "../../utils/errors";
 
 /**
  * List Flights (Admin)
@@ -25,6 +25,16 @@ export async function listFlights(query: any) {
     values.push([].concat(query.airlines));
   }
 
+  if (query.source) {
+    clauses.push(`LOWER(source) = LOWER($${i++})`);
+    values.push(String(query.source));
+  }
+
+  if (query.destination) {
+    clauses.push(`LOWER(destination) = LOWER($${i++})`);
+    values.push(String(query.destination));
+  }
+
   if (query.minPrice) {
     clauses.push(`price >= $${i++}`);
     values.push(Number(query.minPrice));
@@ -39,7 +49,7 @@ export async function listFlights(query: any) {
     const buckets = [].concat(query.depTime);
     const ranges: string[] = [];
 
-    buckets.forEach(b => {
+    buckets.forEach((b: string) => {
       if (b === "morning") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 6 AND 11`);
       if (b === "afternoon") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 12 AND 17`);
       if (b === "evening") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 18 AND 23`);
@@ -47,6 +57,38 @@ export async function listFlights(query: any) {
     });
 
     if (ranges.length) clauses.push(`(${ranges.join(" OR ")})`);
+  }
+
+  // Single-day departure filter. Expects YYYY-MM-DD.
+  if (query.date) {
+    clauses.push(`departure >= $${i} AND departure < $${i + 1}`);
+    const d = new Date(`${query.date}T00:00:00.000Z`);
+    const next = new Date(d);
+    next.setUTCDate(next.getUTCDate() + 1);
+    values.push(d, next);
+    i += 2;
+  }
+
+  // Explicit departure range
+  if (query.departureFrom) {
+    clauses.push(`departure >= $${i++}`);
+    values.push(new Date(query.departureFrom));
+  }
+
+  if (query.departureTo) {
+    clauses.push(`departure <= $${i++}`);
+    values.push(new Date(query.departureTo));
+  }
+
+  // Arrival range
+  if (query.arrivalFrom) {
+    clauses.push(`arrival >= $${i++}`);
+    values.push(new Date(query.arrivalFrom));
+  }
+
+  if (query.arrivalTo) {
+    clauses.push(`arrival <= $${i++}`);
+    values.push(new Date(query.arrivalTo));
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
@@ -75,12 +117,13 @@ export async function listFlights(query: any) {
 }
 
 
-
 /**
  * Get Flights By ID
  */
 export async function getFlightById(id: string) {
-  const { rows } = await pool.query(`SELECT * FROM flights WHERE id = $1`, [id]);
+  const { rows } = await pool.query(`SELECT * FROM flights WHERE id = $1`, [
+    id,
+  ]);
 
   if (!rows.length) {
     throw new AppError("Flights not found", 404);
@@ -88,4 +131,3 @@ export async function getFlightById(id: string) {
 
   return rows[0];
 }
-
