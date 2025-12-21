@@ -1,7 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Wifi, Coffee, UtensilsCrossed, Car, Building } from "lucide-react";
+import {
+  Star,
+  MapPin,
+  Wifi,
+  Coffee,
+  UtensilsCrossed,
+  Car,
+  Building,
+  Info,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
 
@@ -40,14 +49,18 @@ export const HotelCard = ({
     parking: Car,
   };
 
-  const primaryImage= useMemo(()=>{
-    return images?.find((img:any)=>img.is_primary)?.url
-  },[images])
+  const primaryImage = useMemo(() => {
+    return images?.find((img: any) => img.is_primary)?.url;
+  }, [images]);
   return (
     <Card className="overflow-hidden hover:shadow-elegant transition-all duration-300">
       <div className="flex flex-col md:flex-row">
         <div className="md:w-1/3 h-48 md:h-auto relative">
-          <img src={primaryImage} alt={name} className="w-full h-full object-cover" />
+          <img
+            src={primaryImage}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
           {discount && (
             <Badge className="absolute top-3 right-3 bg-accent text-white">
               {discount}% OFF
@@ -62,7 +75,9 @@ export const HotelCard = ({
                 <h3 className="text-xl font-bold mb-1">{name}</h3>
                 <div className="flex items-center gap-1 text-muted-foreground text-sm">
                   <MapPin className="h-4 w-4" />
-                  <span>{city},{state}</span>
+                  <span>
+                    {city},{state}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -76,9 +91,16 @@ export const HotelCard = ({
 
             <div className="flex gap-3 mt-4">
               {Object.entries(amenities)?.map((amenity, idx) => {
-                const Icon = amenityIcons[amenity?.[0]];
+                const Icon =
+                  amenity?.[0] in amenityIcons
+                    ? amenityIcons[amenity?.[0]]
+                    : Info;
+
                 return Icon ? (
-                  <div key={idx} className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <div
+                    key={idx}
+                    className="flex items-center gap-1 text-sm text-muted-foreground"
+                  >
                     <Icon className="h-4 w-4" />
                   </div>
                 ) : null;
