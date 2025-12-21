@@ -21,13 +21,11 @@ import {
   Check,
   Phone,
   Mail,
+  Info,
 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import {  useParams, useSearchParams } from "react-router-dom";
 import { useHotel } from "@/hooks/useHotels";
-import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { useRooms } from "@/hooks/useRooms";
@@ -41,7 +39,6 @@ const amenityIcons: Record<string, any> = {
   parking: Car,
 };
 export default function HotelDetail() {
-  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const { id } = useParams();
   const [params] = useSearchParams();
@@ -114,7 +111,7 @@ export default function HotelDetail() {
                 <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {Object.entries(hotel?.amenities)?.map(([amenity], index) => {
-                    const Icon = amenityIcons[amenity];
+                    const Icon = amenityIcons[amenity] ?? <Info/>;
                     return (
                       <div key={index} className="flex items-center gap-2">
                         <div className="p-2 rounded-lg bg-primary/10">

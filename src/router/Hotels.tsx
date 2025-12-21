@@ -1,3 +1,4 @@
+import HotelDetail from "@/pages/Hotel/HotelDetail";
 import type { RouteObject } from "react-router-dom";
 
 const Hotels: RouteObject = {
@@ -14,8 +15,7 @@ const Hotels: RouteObject = {
       // Changed this path
       path: ":id",
       lazy: async () => {
-        const Hotel = await import("@/pages/Hotel/HotelDetail");
-        return { Component: Hotel.default };
+        return { Component: HotelDetail };
       },
     },
   ],
