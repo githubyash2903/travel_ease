@@ -82,12 +82,12 @@ export const Header = () => {
           >
             Offers
           </Link>
-          <Link
+          {/* <Link
             to="/blogs"
             className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
             Blogs
-          </Link>
+          </Link> */}
           <Link
             to="/about"
             className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
