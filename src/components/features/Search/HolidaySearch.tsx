@@ -4,9 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search } from "lucide-react";
-import { showToast } from "@/lib/toast";
-
-import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const destinations = [
   "Bali, Indonesia", "Maldives", "Switzerland", "Dubai, UAE", "Paris, France", 
@@ -20,20 +18,13 @@ const packageTypes = [
 export const HolidaySearch = () => {
   const [destination, setDestination] = useState("");
   const [packageType, setPackageType] = useState("");
-  const navigate = useNavigate();
 
   const handleSearch = () => {
     if (!destination && !packageType) {
-      showToast.error("Please select at least destination or package type");
+      toast.error("Please select at least destination or package type");
       return;
     }
-    showToast.success("Searching holiday packages...");
-    const params = new URLSearchParams({
-      destination,
-      packageType,
-    });
-
-    navigate(`/holidays?${params.toString()}`);
+    toast.success("Searching holiday packages...");
   };
 
   return (
@@ -45,12 +36,12 @@ export const HolidaySearch = () => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full hover:bg-[#EE5B2B] justify-start text-left hover:text-white font-normal h-12"
+                className="w-full justify-start text-left font-normal h-12"
               >
                 {destination || "Where do you want to go?"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[90vw] sm:w-80 p-0" align="start">
+            <PopoverContent className="w-80 p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search destinations..." />
                 <CommandList>
@@ -74,12 +65,12 @@ export const HolidaySearch = () => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full hover:bg-[#EE5B2B] hover:text-white justify-start text-left font-normal h-12"
+                className="w-full justify-start text-left font-normal h-12"
               >
                 {packageType || "Select package type"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[90vw] sm:w-80 p-0" align="start">
+            <PopoverContent className="w-80 p-0" align="start">
               <Command>
                 <CommandInput placeholder="Search package types..." />
                 <CommandList>
@@ -99,7 +90,7 @@ export const HolidaySearch = () => {
       </div>
 
       <Button
-       className="w-full h-12 text-lg bg-blue-500 hover:opacity-90 transition-opacity"
+        className="w-full h-12 text-lg bg-gradient-hero hover:opacity-90 transition-opacity"
         onClick={handleSearch}
       >
         <Search className="mr-2 h-5 w-5" />

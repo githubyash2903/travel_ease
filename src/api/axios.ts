@@ -47,6 +47,7 @@ authClient.interceptors.response.use(
     if (error?.response?.status === 401) {
       // remove token → logout
       localStorage.removeItem("token");
+      localStorage.removeItem("role");
 
       // optional redirect
       window.location.href = "/auth";

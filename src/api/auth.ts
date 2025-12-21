@@ -17,5 +17,5 @@ export const loginUser = async (payload: {
 /* ---------------- LOGOUT ---------------- */
 export const logoutUser = async () => {
   localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  localStorage.removeItem('role');
 };

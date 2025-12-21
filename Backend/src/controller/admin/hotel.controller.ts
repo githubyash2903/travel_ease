@@ -25,8 +25,8 @@ export async function list(_req: Request, res: Response, next: NextFunction) {
 
 export async function update(req: Request, res: Response, next: NextFunction) {
   try {
-    const payload = updateHotelSchema.parse(req.body);
-    await service.updateHotel(req.params.id, payload);
+    // const payload = updateHotelSchema.parse(req.body);
+    await service.updateHotel(req.params.id, req.body);
     return success(res, null, 'Hotel updated');
   } catch (e) {
     next(e);

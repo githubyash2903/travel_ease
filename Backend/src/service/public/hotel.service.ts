@@ -6,6 +6,7 @@ import { AppError } from "../../utils/errors";
  * Only returns ACTIVE hotels
  */
 export async function listHotels(query: any) {
+  console.log(query,'query')
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 50);
   const offset = (page - 1) * limit;
@@ -18,6 +19,17 @@ export async function listHotels(query: any) {
   const minRating =
     query.minRating !== undefined ? Number(query.minRating) : null;
 
+  const minPrice =
+    query.minPrice !== undefined ? Number(query.minPrice) : null;
+
+  const maxPrice =
+    query.maxPrice !== undefined ? Number(query.maxPrice) : null;
+
+  const minRatingCount =
+    query.minRatingCount !== undefined
+      ? Number(query.minRatingCount)
+      : null;
+
   const amenities =
     Array.isArray(query.amenities) && query.amenities.length > 0
       ? query.amenities
@@ -26,28 +38,40 @@ export async function listHotels(query: any) {
   const sort =
     typeof query.sort === "string" ? query.sort.toLowerCase() : "rating_desc";
 
-  /* -------------------- WHERE CLAUSE -------------------- */
   const whereClauses: string[] = ["is_active = true"];
   const params: any[] = [];
   let idx = 1;
 
   if (city) {
-    whereClauses.push(`city = $${idx++}`);
-    params.push(city);
-  }
+  whereClauses.push(`LOWER(city) = LOWER($${idx++})`);
+  params.push(city);
+}
 
   if (minRating !== null && !Number.isNaN(minRating)) {
     whereClauses.push(`rating >= $${idx++}`);
     params.push(minRating);
   }
 
+  if (minRatingCount !== null && !Number.isNaN(minRatingCount)) {
+    whereClauses.push(`rating_count >= $${idx++}`);
+    params.push(minRatingCount);
+  }
+
+  if (minPrice !== null && !Number.isNaN(minPrice)) {
+    whereClauses.push(`min_price_per_night >= $${idx++}`);
+    params.push(minPrice);
+  }
+
+  if (maxPrice !== null && !Number.isNaN(maxPrice)) {
+    whereClauses.push(`min_price_per_night <= $${idx++}`);
+    params.push(maxPrice);
+  }
+
   if (amenities) {
-    // requires all requested amenities to be present
     whereClauses.push(`amenities @> $${idx++}::jsonb`);
     params.push(JSON.stringify(amenities));
   }
 
-  /* -------------------- SORTING -------------------- */
   let orderBy = "rating DESC NULLS LAST";
 
   switch (sort) {
@@ -63,35 +87,35 @@ export async function listHotels(query: any) {
     case "name_desc":
       orderBy = "name DESC";
       break;
-    case "rating_desc":
-    default:
-      orderBy = "rating DESC NULLS LAST";
   }
 
-  /* -------------------- FINAL QUERY -------------------- */
   const sql = `
     SELECT
       id,
       name,
       description,
       city,
+      state,
       address,
       rating,
+      rating_count,
+      min_price_per_night,
       amenities,
       images,
       created_at
     FROM hotels
     WHERE ${whereClauses.join(" AND ")}
     ORDER BY ${orderBy}
-    LIMIT $${idx++} OFFSET $${idx}
+    LIMIT $${idx++}
+    OFFSET $${idx}
   `;
 
   params.push(limit, offset);
 
   const { rows } = await pool.query(sql, params);
-
   return rows;
 }
+
 
 
 /**

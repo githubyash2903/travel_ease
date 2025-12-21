@@ -9,28 +9,56 @@ export async function listUsers(query: any) {
   const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
   const offset = (page - 1) * limit;
 
-  // Normalize type query
-  const type = typeof query.type === 'string' ? query.type.toLowerCase() : undefined;
+  const type =
+    typeof query.type === 'string' ? query.type.toLowerCase() : undefined;
 
-  let whereClause = 'WHERE is_active = true'; // default: only active users
+  // base conditions
+  const conditions: string[] = [];
+  const values: any[] = [];
+
+  // role filter: only USER
+  conditions.push(`role = $${values.length + 1}`);
+  values.push('USER');
+
+  // active / inactive filter
   if (type === 'all') {
-    whereClause = ''; // no filter
-  } else if (type && type !== 'all') {
-    // invalid type or anything else -> inactive users
-    whereClause = 'WHERE is_active = false';
+    // no is_active filter
+  } else if (type === 'active' || !type) {
+    conditions.push(`is_active = $${values.length + 1}`);
+    values.push(true);
+  } else if (type === 'inactive') {
+    conditions.push(`is_active = $${values.length + 1}`);
+    values.push(false);
   }
 
+  // pagination params
+  values.push(limit, offset);
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
   const sql = `
-    SELECT id, name, email, phone_country_code, phone_number, role, is_active, created_at, updated_at
+    SELECT
+      id,
+      name,
+      email,
+      phone_country_code,
+      phone_number,
+      role,
+      is_active,
+      created_at,
+      updated_at
     FROM users
     ${whereClause}
     ORDER BY created_at DESC
-    LIMIT $1 OFFSET $2
+    LIMIT $${values.length - 1}
+    OFFSET $${values.length}
   `;
 
-  const { rows } = await pool.query(sql, [limit, offset]);
+  const { rows } = await pool.query(sql, values);
   return rows;
 }
+
 
 
 /**

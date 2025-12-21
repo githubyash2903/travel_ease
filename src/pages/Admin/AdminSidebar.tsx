@@ -13,28 +13,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  LayoutDashboard, 
+import {
+  LayoutDashboard,
   Palmtree,
   Plane,
   Hotel,
   Tag,
-  CalendarCheck, 
-  Users, 
+  CalendarCheck,
+  Users,
   Settings,
   Search,
   Bell,
   Menu,
   LogOut,
   User,
-  ChevronDown
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-
+import { logoutUser } from "@/api/auth";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/hotels", label: "Hotels", icon: Hotel },
+  { href: "/admin/rooms", label: "Rooms", icon: Hotel },
   { href: "/admin/packages", label: "Holiday Packages", icon: Palmtree },
   { href: "/admin/api-manager", label: "Flight & Hotel API", icon: Plane },
   { href: "/admin/coupons", label: "Offers & Coupons", icon: Tag },
@@ -46,19 +48,25 @@ const navItems = [
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
 
-
-
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
-        <Link to="/admin" className="flex items-center gap-3" onClick={onNavigate}>
+        <Link
+          to="/admin"
+          className="flex items-center gap-3"
+          onClick={onNavigate}
+        >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
             <Plane className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <div className="font-bold text-sm text-sidebar-foreground">TravelAdmin</div>
-            <p className="text-xs text-sidebar-foreground/60">Management Portal</p>
+            <div className="font-bold text-sm text-sidebar-foreground">
+              TravelAdmin
+            </div>
+            <p className="text-xs text-sidebar-foreground/60">
+              Management Portal
+            </p>
           </div>
         </Link>
       </div>
@@ -67,9 +75,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.href || 
+          const isActive =
+            location.pathname === item.href ||
             (item.href !== "/admin" && location.pathname.startsWith(item.href));
-          
+
           return (
             <Link
               key={item.href}
@@ -77,8 +86,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
-                isActive 
-                  ? "bg-primary text-primary-foreground shadow-md" 
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-md"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               )}
             >
@@ -96,7 +105,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <div className="w-2 h-2 rounded-full bg-green-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-sidebar-foreground">System Status</p>
+            <p className="text-xs font-medium text-sidebar-foreground">
+              System Status
+            </p>
             <p className="text-xs text-green-500">All systems operational</p>
           </div>
         </div>
@@ -113,9 +124,8 @@ export function AdminSidebar() {
     navigate("/admin/settings");
   };
 
-
   const handleLogout = () => {
-    logout();
+    logoutUser();
     navigate("/auth");
   };
 
@@ -134,9 +144,9 @@ export function AdminSidebar() {
       </Sheet>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 ">
         {/* Top Bar */}
-        <header className="h-16 border-b border-border bg-background flex items-center gap-4 px-4 lg:px-6">
+        <header className="h-16 border-b border-border bg-background flex justify-between items-center gap-4 px-4 lg:px-6">
           {/* Mobile Menu */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
@@ -150,8 +160,8 @@ export function AdminSidebar() {
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search bookings, users, packages..." 
+              <Input
+                placeholder="Search bookings, users, packages..."
                 className="pl-10 bg-muted/50 border-0"
               />
             </div>
@@ -173,15 +183,21 @@ export function AdminSidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
                   <span className="font-medium">New booking received</span>
-                  <span className="text-xs text-muted-foreground">Maldives Package - ₹85,000</span>
+                  <span className="text-xs text-muted-foreground">
+                    Maldives Package - ₹85,000
+                  </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
                   <span className="font-medium">Payment confirmed</span>
-                  <span className="text-xs text-muted-foreground">Booking #TRV-2024-001</span>
+                  <span className="text-xs text-muted-foreground">
+                    Booking #TRV-2024-001
+                  </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
                   <span className="font-medium">API Alert</span>
-                  <span className="text-xs text-muted-foreground">Amadeus API rate limit at 80%</span>
+                  <span className="text-xs text-muted-foreground">
+                    Amadeus API rate limit at 80%
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -189,10 +205,15 @@ export function AdminSidebar() {
             {/* Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 pl-2 pr-3">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 pl-2 pr-3"
+                >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/placeholder.svg" />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">AD</AvatarFallback>
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      AD
+                    </AvatarFallback>
                   </Avatar>
                   <div className="hidden sm:block text-left">
                     <p className="text-sm font-medium">Admin User</p>
@@ -202,20 +223,18 @@ export function AdminSidebar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-               
                 <DropdownMenuItem onClick={handlesetting}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-               <DropdownMenuItem
-  className="text-destructive cursor-pointer"
-  onClick={handleLogout}
->
-  <LogOut className="mr-2 h-4 w-4" />
-  Logout
-</DropdownMenuItem>
-
+                <DropdownMenuItem
+                  className="text-destructive cursor-pointer"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

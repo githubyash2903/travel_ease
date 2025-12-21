@@ -1,223 +1,185 @@
-// src/components/molecules/search/HotelSearch.tsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandItem,
-  CommandGroup,
-  CommandEmpty,
-} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { format } from "date-fns";
 import { CalendarIcon, Search } from "lucide-react";
-import { showToast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-/* ---------------------------------------------
-   TEMP CITY LIST (LATER API)
---------------------------------------------- */
 const mockCities = [
-  { code: "Mumbai", name: "Mumbai" },
-  { code: "Delhi", name: "Delhi" },
-  { code: "Goa", name: "Goa" },
-  { code: "Bangalore", name: "Bangalore" },
+  "Mumbai", "Delhi", "Bangalore", "Goa", "Jaipur",
 ];
 
-/* ---------------------------------------------
-   COMPONENT
---------------------------------------------- */
 export const HotelSearch = () => {
-  const navigate = useNavigate();
-
   const [city, setCity] = useState("");
-  const [checkin, setCheckin] = useState<Date | undefined>();
-  const [checkout, setCheckout] = useState<Date | undefined>();
-  const [guests, setGuests] = useState(2);
+  const [checkIn, setCheckIn] = useState<Date>();
+  const [checkOut, setCheckOut] = useState<Date>();
   const [rooms, setRooms] = useState(1);
+  const [guests, setGuests] = useState(2);
 
-  /* ---------------------------------------------
-     SEARCH HANDLER (FIXED)
-  --------------------------------------------- */
   const handleSearch = () => {
-    if (!city || !checkin || !checkout) {
-      showToast.error("Please select city, check-in and check-out dates");
+    if (!city || !checkIn || !checkOut) {
+      toast.error("Please fill all required fields");
       return;
     }
-
-    if (checkout <= checkin) {
-      showToast.error("Check-out date must be after check-in");
-      return;
-    }
-
-    // ✅ ONLY REQUIRED PARAMS
-    const params = new URLSearchParams();
-    params.append("city", city);
-    params.append("checkin", format(checkin, "yyyy-MM-dd"));
-    params.append("checkout", format(checkout, "yyyy-MM-dd"));
-    params.append("guests", String(guests));
-    params.append("rooms", String(rooms));
-
-    navigate(`/hotels?${params.toString()}`);
+    toast.success("Searching hotels...");
   };
 
-  /* ---------------------------------------------
-     UI
-  --------------------------------------------- */
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label>City, Property, or Location</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal h-12"
+            >
+              {city || "Where do you want to stay?"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search destinations..." />
+              <CommandList>
+                <CommandEmpty>No destinations found.</CommandEmpty>
+                <CommandGroup>
+                  {mockCities.map((c) => (
+                    <CommandItem key={c} onSelect={() => setCity(c)}>
+                      {c}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
 
-      {/* CITY + DATES */}
-      <div className="grid md:grid-cols-3 gap-4 items-end">
-
-        {/* CITY */}
-        <div>
-          <Label>Destination</Label>
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Check-in Date</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full h-12 justify-start text-left"
-              >
-                {city || "Select city"}
-              </Button>
-            </PopoverTrigger>
-
-            <PopoverContent className="w-[90vw] sm:w-64 p-0">
-              <Command>
-                <CommandInput placeholder="Search cities..." />
-                <CommandList>
-                  <CommandEmpty>No cities found</CommandEmpty>
-                  <CommandGroup>
-                    {mockCities.map((c) => (
-                      <CommandItem
-                        key={c.code}
-                        onSelect={() => setCity(c.name)}
-                      >
-                        {c.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* CHECK-IN */}
-        <div>
-          <Label>Check-in</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full h-12 justify-start text-left"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-12",
+                  !checkIn && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {checkin ? format(checkin, "PPP") : "Select date"}
+                {checkIn ? format(checkIn, "PPP") : "Select date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={checkin}
-                onSelect={setCheckin}
-                disabled={(d) => d < new Date()}
+                selected={checkIn}
+                onSelect={setCheckIn}
+                disabled={(date) => date < new Date()}
+                initialFocus
               />
             </PopoverContent>
           </Popover>
         </div>
 
-        {/* CHECK-OUT */}
-        <div>
-          <Label>Check-out</Label>
+        <div className="space-y-2">
+          <Label>Check-out Date</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full h-12 justify-start text-left"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-12",
+                  !checkOut && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {checkout ? format(checkout, "PPP") : "Select date"}
+                {checkOut ? format(checkOut, "PPP") : "Select date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={checkout}
-                onSelect={setCheckout}
-                disabled={(d) => d <= (checkin || new Date())}
+                selected={checkOut}
+                onSelect={setCheckOut}
+                disabled={(date) => date < (checkIn || new Date())}
+                initialFocus
               />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Guests & Rooms</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal h-12"
+              >
+                {guests} Guests, {rooms} Room{rooms > 1 ? 's' : ''}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="start">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Guests</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setGuests(Math.max(1, guests - 1))}
+                    >
+                      -
+                    </Button>
+                    <span className="w-8 text-center">{guests}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setGuests(guests + 1)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Rooms</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setRooms(Math.max(1, rooms - 1))}
+                    >
+                      -
+                    </Button>
+                    <span className="w-8 text-center">{rooms}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setRooms(rooms + 1)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </PopoverContent>
           </Popover>
         </div>
       </div>
 
-      {/* GUESTS + ROOMS + SEARCH */}
-      <div className="grid md:grid-cols-3 gap-4 items-end">
-
-        {/* GUESTS */}
-        <div>
-          <Label>Guests</Label>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              className="h-12 w-12"
-              onClick={() => setGuests(Math.max(1, guests - 1))}
-            >
-              -
-            </Button>
-            <div className="flex-grow text-center text-lg">{guests}</div>
-            <Button
-              variant="outline"
-              className="h-12 w-12"
-              onClick={() => setGuests(guests + 1)}
-            >
-              +
-            </Button>
-          </div>
-        </div>
-
-        {/* ROOMS */}
-        <div>
-          <Label>Rooms</Label>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              className="h-12 w-12"
-              onClick={() => setRooms(Math.max(1, rooms - 1))}
-            >
-              -
-            </Button>
-            <div className="flex-grow text-center text-lg">{rooms}</div>
-            <Button
-              variant="outline"
-              className="h-12 w-12"
-              onClick={() => setRooms(rooms + 1)}
-            >
-              +
-            </Button>
-          </div>
-        </div>
-
-        {/* SEARCH */}
-        <div className="flex items-center justify-end">
-          <Button
-            className="w-full h-12 bg-blue-500 text-white"
-            onClick={handleSearch}
-          >
-            <Search className="mr-2 h-4 w-4" />
-            Search Hotels
-          </Button>
-        </div>
-      </div>
+      <Button
+        className="w-full h-12 text-lg bg-gradient-hero hover:opacity-90 transition-opacity"
+        onClick={handleSearch}
+      >
+        <Search className="mr-2 h-5 w-5" />
+        Search Hotels
+      </Button>
     </div>
   );
 };

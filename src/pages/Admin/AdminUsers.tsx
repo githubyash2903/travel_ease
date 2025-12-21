@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {authClient} from "@/api/axios";
+import { authClient } from "@/api/axios";
 
 import {
   Card,
@@ -28,68 +28,26 @@ import {
   Phone,
   Calendar,
   ShieldCheck,
-  Ban,
 } from "lucide-react";
 import { format } from "date-fns";
+import { fetchAllUsers } from "@/api/admin/users";
 
-/* ---------------------------------------------
-   TYPES (Backend-aligned)
---------------------------------------------- */
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  last_login: string | null;
-  created_at: string;
-  country_code: string;
-  phone_no: string;
-}
-
-/* ---------------------------------------------
-   API FUNCTIONS
---------------------------------------------- */
-const fetchAllUsers = async (): Promise<User[]> => {
-  const res = await authClient.get("/admin/users");
-  return res.data.data; // <-- important
-};
-
-const deactivateUser = async (payload: { id: string; status: string }) => {
-  const res = await authClient.post("/admin/users/deactivate", payload);
-  return res.data;
-};
-
-/* ---------------------------------------------
-   COMPONENT
---------------------------------------------- */
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
-  const queryClient = useQueryClient();
-
-  /* -------- Fetch Users -------- */
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-all-users"],
     queryFn: fetchAllUsers,
+    select: (data:any) => data?.data?.data,
   });
 
-  /* -------- Deactivate Mutation -------- */
-  const deactivateMutation = useMutation({
-    mutationFn: deactivateUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-all-users"] });
-      setSelectedUser(null);
-    },
-  });
 
-  /* -------- Helpers -------- */
-  const filteredUsers = users.filter(
+  const filteredUsers = (users || []).filter(
     (user) =>
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone_no?.includes(searchTerm)
+      user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.phone_number?.includes(searchTerm)
   );
 
   const getInitials = (name: string) =>
@@ -100,16 +58,13 @@ export default function AdminUsers() {
       .toUpperCase()
       .slice(0, 2);
 
-  const statusBadge = (status: string) => {
-    if (status.toLowerCase() === "blocked") {
+  const statusBadge = (is_active: boolean) => {
+    if (!is_active) {
       return <Badge variant="destructive">Blocked</Badge>;
     }
     return <Badge variant="secondary">Active</Badge>;
   };
 
-  /* ---------------------------------------------
-     UI
-  --------------------------------------------- */
   return (
     <div className="space-y-6">
       <div>
@@ -134,9 +89,7 @@ export default function AdminUsers() {
       <Card>
         <CardHeader>
           <CardTitle>All Users</CardTitle>
-          <CardDescription>
-            {filteredUsers.length} users found
-          </CardDescription>
+          <CardDescription>{filteredUsers.length} users found</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -146,36 +99,35 @@ export default function AdminUsers() {
             <div className="space-y-4">
               {filteredUsers.map((user) => (
                 <div
-                  key={user.id}
+                  key={user?.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials(user.name)}
+                        {getInitials(user?.name)}
                       </AvatarFallback>
                     </Avatar>
 
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{user?.name}</p>
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Mail className="h-3 w-3" />
-                        {user.email}
+                        {user?.email}
                       </p>
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Phone className="h-3 w-3" />
-                        {user.country_code} {user.phone_no}
+                        {user?.phone_country_code} {user?.phone_number}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
                     <div className="text-right hidden md:block">
-                      {statusBadge(user.status)}
+                      {statusBadge(user?.is_active)}
                       <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 justify-end">
                         <Calendar className="h-3 w-3" />
-                        Joined{" "}
-                        {format(new Date(user.created_at), "MMM yyyy")}
+                        Joined {format(new Date(user?.created_at), "MMM yyyy")}
                       </p>
                     </div>
 
@@ -203,9 +155,7 @@ export default function AdminUsers() {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>
-              View and manage user account
-            </DialogDescription>
+            <DialogDescription>View and manage user account</DialogDescription>
           </DialogHeader>
 
           {selectedUser && (
@@ -213,20 +163,20 @@ export default function AdminUsers() {
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                    {getInitials(selectedUser.name)}
+                    {getInitials(selectedUser?.name)}
                   </AvatarFallback>
                 </Avatar>
 
                 <div>
                   <h3 className="text-xl font-semibold">
-                    {selectedUser.name}
+                    {selectedUser?.name}
                   </h3>
                   <div className="flex gap-2 items-center">
                     <Badge variant="outline">
                       <ShieldCheck className="h-3 w-3 mr-1" />
-                      {selectedUser.role}
+                      {selectedUser?.role}
                     </Badge>
-                    {statusBadge(selectedUser.status)}
+                    {statusBadge(selectedUser?.is_active)}
                   </div>
                 </div>
               </div>
@@ -234,41 +184,33 @@ export default function AdminUsers() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{selectedUser.email}</p>
+                  <p className="font-medium">{selectedUser?.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
                   <p className="font-medium">
-                    {selectedUser.country_code} {selectedUser.phone_no}
+                    {selectedUser?.phone_country_code} {selectedUser?.phone_number}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Joined</p>
                   <p className="font-medium">
-                    {format(new Date(selectedUser.created_at), "PPP")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Last Login</p>
-                  <p className="font-medium">
-                    {selectedUser.last_login
-                      ? format(new Date(selectedUser.last_login), "PPP p")
-                      : "Never"}
+                    {format(new Date(selectedUser?.created_at), "PPP")}
                   </p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-3">
+              {/* <div className="flex justify-end gap-3">
                 <Button
                   variant="destructive"
                   disabled={
-                    selectedUser.status.toLowerCase() === "blocked" ||
+                    !selectedUser?.is_active ||
                     deactivateMutation.isPending
                   }
                   onClick={() =>
                     deactivateMutation.mutate({
-                      id: selectedUser.id,
+                      id: selectedUser?.id,
                       status: "Blocked",
                     })
                   }
@@ -276,7 +218,7 @@ export default function AdminUsers() {
                   <Ban className="h-4 w-4 mr-2" />
                   Block User
                 </Button>
-              </div>
+              </div> */}
             </div>
           )}
         </DialogContent>

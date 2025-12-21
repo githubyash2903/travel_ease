@@ -11,19 +11,25 @@ export async function createRoom(data: any) {
       hotel_id,
       type,
       description,
+      area_sqft,
+      max_occupancy,
+      beds,
       price_per_night,
       total_rooms,
       amenities,
       images,
       is_active
     )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8,true))
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,COALESCE($11,true))
     RETURNING *
     `,
     [
       data.hotel_id,
       data.type,
       data.description ?? null,
+      data.area_sqft ?? 0,
+      data.max_occupancy ?? 1,
+      JSON.stringify(data.beds ?? []),
       data.price_per_night,
       data.total_rooms,
       data.amenities ?? {},
@@ -54,15 +60,32 @@ export async function listRooms(query: any, hotelId?: string) {
 
   if (hotelId) {
     params.push(hotelId);
-    whereClause += `${params.length ? " AND" : "WHERE"} r.hotel_id = $${
-      params.length
-    }`;
+    whereClause += ` AND r.hotel_id = $${params.length}`;
   }
 
   params.push(limit, offset);
 
   const sql = `
-    SELECT r.*, h.name as hotel_name
+    SELECT
+      r.id,
+      r.hotel_id,
+      r.type,
+      r.description,
+
+      r.area_sqft::float8        AS area_sqft,
+      r.max_occupancy,
+      r.beds,
+
+      r.price_per_night::float8 AS price_per_night,
+      r.total_rooms,
+
+      r.amenities,
+      r.images,
+      r.is_active,
+      r.created_at,
+      r.updated_at,
+
+      h.name AS hotel_name
     FROM rooms r
     JOIN hotels h ON r.hotel_id = h.id
     ${whereClause}
@@ -101,26 +124,34 @@ export async function updateRoom(id: string, data: any) {
     `
     UPDATE rooms
     SET
-      type           = COALESCE($2, type),
-      description    = COALESCE($3, description),
-      price_per_night= COALESCE($4, price_per_night),
-      total_rooms    = COALESCE($5, total_rooms),
-      amenities      = COALESCE($6, amenities),
-      images         = COALESCE($7, images),
-      is_active      = COALESCE($8, is_active),
+      type           = COALESCE($1, type),
+      description    = COALESCE($2, description),
+      area_sqft    = COALESCE($3, area_sqft),
+      max_occupancy    = COALESCE($4, max_occupancy),
+      beds    = COALESCE($5, beds),
+      price_per_night= COALESCE($6, price_per_night),
+      total_rooms    = COALESCE($7, total_rooms),
+      amenities      = COALESCE($8, amenities),
+      images         = COALESCE($9, images),
+      is_active      = COALESCE($10, is_active),
+      hotel_id      = COALESCE($11, hotel_id),
       updated_at     = now()
-    WHERE id = $1
+    WHERE id = $12
     RETURNING *
     `,
     [
-      id,
       data.type,
       data.description,
+      data.area_sqft ?? 0,
+      data.max_occupancy ?? 1,
+      JSON.stringify(data.beds ?? []),
       data.price_per_night,
       data.total_rooms,
       data.amenities ?? {},
       JSON.stringify(data.images ?? []),
       data.is_active,
+      data.hotel_id,
+      id,
     ]
   );
 

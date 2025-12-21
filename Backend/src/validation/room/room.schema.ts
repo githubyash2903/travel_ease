@@ -24,6 +24,9 @@ export const createRoomSchema = z.object({
   hotel_id: z.string().uuid(),
   type: z.string().min(2),
   description: z.string().optional(),
+  area_sqft: z.number().min(0),
+  max_occupancy: z.number().min(0),
+  beds: z.array(z.any()).optional(),
   price_per_night: z.number().min(0),
   total_rooms: z.number().int().positive(),
 

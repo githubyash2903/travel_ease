@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import showToast from "@/lib/toast";
-import AdminLayout from "@/components/layout/AdminLayout";
+
 // Defined types manually since Supabase types are removed
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 type BookingType = "flight" | "hotel" | "bus" | "holiday";

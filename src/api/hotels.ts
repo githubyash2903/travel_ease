@@ -1,5 +1,18 @@
 import { publicClient } from "./axios";
 
+export const getHotels = async (params) => {
+  return await publicClient.get("/public/hotels", { params });
+};
+export const getHotel = async (hotelId) => {
+  return await publicClient.get(`/public/hotels/${hotelId}`);
+};
+export const getHotelRooms = async (params,hotelId) => {
+  return await publicClient.get(`/public/room/${hotelId}`, { params });
+};
+export const getRoom = async (roomId) => {
+  return await publicClient.get(`/public/room/${roomId}`);
+};
+
 /* -------------------------------------------------
    SEARCH HOTELS (LISTING PAGE)
 ------------------------------------------------- */
@@ -11,8 +24,8 @@ export const searchHotelsAPI = async (params: {
   rooms?: number;
   priceMin?: number;
   priceMax?: number;
-  stars?: string;        // "5,4"
-  amenities?: string;   // "Wifi,Pool"
+  stars?: string; // "5,4"
+  amenities?: string; // "Wifi,Pool"
   propertyType?: string;
   roomType?: string;
   page?: number;
