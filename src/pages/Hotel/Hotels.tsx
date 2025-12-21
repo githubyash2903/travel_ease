@@ -1,11 +1,3 @@
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { HotelCard } from "@/components/features/Hotels/HotelCard";
 import { HotelFilters } from "@/components/features/Hotels/HotelFilters";
 import { useHotels } from "@/hooks/useHotels";

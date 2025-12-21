@@ -1,25 +1,58 @@
+import { useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 
-export const FlightFilters = ({
-  filters,
-  setFilters,
-}: {
-  filters: any;
-  setFilters: (val: any) => void;
-}) => {
-  // Handle checkbox array filters
-  const toggleFilter = (category: string, value: string) => {
-    const arr = filters[category] || [];
-    if (arr.includes(value)) {
-      setFilters({ ...filters, [category]: arr.filter((v: any) => v !== value) });
-    } else {
-      setFilters({ ...filters, [category]: [...arr, value] });
-    }
+const AIRLINES = [
+  { key: "IndiGo", label: "IndiGo" },
+  { key: "Air India", label: "Air India" },
+  { key: "SpiceJet", label: "SpiceJet" },
+  { key: "Vistara", label: "Vistara" },
+];
+
+const STOPS = [
+  { key: "0", label: "Non-stop" },
+  { key: "1", label: "1 Stop" },
+  { key: "2", label: "2+ Stops" },
+];
+
+const DEP_TIME = [
+  { key: "morning", label: "Morning (6AM - 12PM)" },
+  { key: "afternoon", label: "Afternoon (12PM - 6PM)" },
+  { key: "evening", label: "Evening (6PM - 12AM)" },
+  { key: "night", label: "Night (12AM - 6AM)" },
+];
+
+export const FlightFilters = () => {
+  const navigate = useNavigate();
+  const { pathname, search } = useLocation();
+  const params = useMemo(() => new URLSearchParams(search), [search]);
+
+  const push = useCallback(
+    (next: URLSearchParams) => {
+      navigate(`${pathname}?${next.toString()}`, { replace: true });
+    },
+    [navigate, pathname],
+  );
+
+  const toggleMulti = (key: string, value: string) => {
+    const next = new URLSearchParams(params);
+    const values = next.getAll(key);
+    next.delete(key);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    values.includes(value)
+      ? values.filter(v => v !== value).forEach(v => next.append(key, v))
+      : [...values, value].forEach(v => next.append(key, v));
+
+    push(next);
   };
+
+  const minPrice = Number(params.get("minPrice") ?? 5000);
+  const maxPrice = Number(params.get("maxPrice") ?? 50000);
 
   return (
     <Card>
@@ -28,82 +61,74 @@ export const FlightFilters = ({
       </CardHeader>
 
       <CardContent className="space-y-6">
-
-        {/* -------- Stops -------- */}
-        <div>
+        {/* Stops */}
+        <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Stops</Label>
-          <div className="space-y-2">
-            {["non-stop", "1-stop", "2-stops"].map((stop) => (
-              <div key={stop} className="flex items-center space-x-2">
-                <Checkbox
-                  checked={filters.stops.includes(stop)}
-                  onCheckedChange={() => toggleFilter("stops", stop)}
-                />
-                <Label className="text-sm cursor-pointer capitalize">{stop}</Label>
-              </div>
-            ))}
-          </div>
+          {STOPS.map(s => (
+            <div key={s.key} className="flex items-center space-x-2">
+              <Checkbox
+                checked={params.getAll("stops").includes(s.key)}
+                onCheckedChange={() => toggleMulti("stops", s.key)}
+              />
+              <Label className="cursor-pointer">{s.label}</Label>
+            </div>
+          ))}
         </div>
 
         <Separator />
 
-        {/* -------- Price Range -------- */}
-        <div>
+        {/* Price */}
+        <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Price Range</Label>
           <Slider
-            value={filters.priceRange}
-            onValueChange={(v) => setFilters({ ...filters, priceRange: v })}
+            min={0}
             max={100000}
             step={1000}
-            className="mb-2"
+            value={[minPrice, maxPrice]}
+            onValueChange={([min, max]) => {
+              const next = new URLSearchParams(params);
+              next.set("minPrice", String(min));
+              next.set("maxPrice", String(max));
+              push(next);
+            }}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>₹{filters.priceRange[0]}</span>
-            <span>₹{filters.priceRange[1]}</span>
+            <span>₹{minPrice}</span>
+            <span>₹{maxPrice}</span>
           </div>
         </div>
 
         <Separator />
 
-        {/* -------- Airlines -------- */}
-        <div>
+        {/* Airlines */}
+        <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Airlines</Label>
-          <div className="space-y-2">
-            {["IndiGo", "Air India", "SpiceJet", "Vistara"].map((airline) => (
-              <div key={airline} className="flex items-center space-x-2">
-                <Checkbox
-                  checked={filters.airlines.includes(airline)}
-                  onCheckedChange={() => toggleFilter("airlines", airline)}
-                />
-                <Label className="text-sm cursor-pointer">{airline}</Label>
-              </div>
-            ))}
-          </div>
+          {AIRLINES.map(a => (
+            <div key={a.key} className="flex items-center space-x-2">
+              <Checkbox
+                checked={params.getAll("airlines").includes(a.key)}
+                onCheckedChange={() => toggleMulti("airlines", a.key)}
+              />
+              <Label className="cursor-pointer">{a.label}</Label>
+            </div>
+          ))}
         </div>
 
         <Separator />
 
-        {/* -------- Departure Time -------- */}
-        <div>
+        {/* Departure time */}
+        <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Departure Time</Label>
-          <div className="space-y-2">
-            {[
-              ["morning", "6AM - 12PM"],
-              ["afternoon", "12PM - 6PM"],
-              ["evening", "6PM - 12AM"],
-              ["night", "12AM - 6AM"],
-            ].map(([key, label]) => (
-              <div key={key} className="flex items-center space-x-2">
-                <Checkbox
-                  checked={filters.departure.includes(key)}
-                  onCheckedChange={() => toggleFilter("departure", key)}
-                />
-                <Label className="text-sm cursor-pointer">{label}</Label>
-              </div>
-            ))}
-          </div>
+          {DEP_TIME.map(t => (
+            <div key={t.key} className="flex items-center space-x-2">
+              <Checkbox
+                checked={params.getAll("depTime").includes(t.key)}
+                onCheckedChange={() => toggleMulti("depTime", t.key)}
+              />
+              <Label className="cursor-pointer">{t.label}</Label>
+            </div>
+          ))}
         </div>
-
       </CardContent>
     </Card>
   );

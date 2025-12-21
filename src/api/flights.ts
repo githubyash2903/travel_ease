@@ -1,6 +1,14 @@
 // src/publicClient/flights.ts
 import { publicClient } from "./axios";
 
+
+export const getFlights = async (params) => {
+  return await publicClient.get("/public/flights", { params });
+};
+export const getFlight = async (flightId) => {
+  return await publicClient.get(`/public/flights/${flightId}`);
+};
+
 /* --------------------------------------------------
    SEARCH FLIGHTS (DB BASED)
    Backend: GET /api/flights

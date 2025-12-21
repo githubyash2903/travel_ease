@@ -1,6 +1,7 @@
 import pool from './db';
 import { runMigrations } from './migrate';
 import { usersTable } from './schemas/001_users';
+import { flightsTable } from './schemas/flights/006_flights';
 import { hotelsTable } from './schemas/hotels/002_hotels';
 import { roomsTable } from './schemas/hotels/003_rooms';
 import { hotelBookingsTable } from './schemas/hotels/004_hotels_bookings';
@@ -29,7 +30,8 @@ export class DatabaseInitializer {
       hotelsTable,
       roomsTable,
       hotelBookingsTable,
-      hotelBookingRoomsTable
+      hotelBookingRoomsTable,
+      flightsTable
     ]);
   }
 }

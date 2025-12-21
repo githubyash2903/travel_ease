@@ -9,6 +9,7 @@ import AdminAPIManager from "@/pages/Admin/AdminAPIManager";
 import AdminHolidayPackages from "@/pages/Admin/AdminHolidayPackages";
 import AdminHotelsPage from "@/pages/Admin/AdminHotels";
 import AdminRoomsPage from "@/pages/Admin/AdminRoomsPage";
+import AdminFlightsPage from "@/pages/Admin/AdminFlightsPage";
 
 const adminRoutes: RouteObject[] = [
   {
@@ -26,6 +27,10 @@ const adminRoutes: RouteObject[] = [
   {
     path: "rooms",
     element: <AdminRoomsPage />,
+  },
+  {
+    path: "flights",
+    element: <AdminFlightsPage />,
   },
   {
     path: "coupons",

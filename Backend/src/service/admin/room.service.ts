@@ -46,7 +46,7 @@ export async function createRoom(data: any) {
  */
 export async function listRooms(query: any, hotelId?: string) {
   const page = Math.max(Number(query.page) || 1, 1);
-  const limit = Math.min(Math.max(Number(query.limit) || 10, 1), 100);
+  const limit = Math.min(Math.max(Number(query.limit) || 100, 1), 100);
   const offset = (page - 1) * limit;
 
   let whereClause = "WHERE r.is_active = true";

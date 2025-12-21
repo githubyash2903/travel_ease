@@ -37,6 +37,7 @@ const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/hotels", label: "Hotels", icon: Hotel },
   { href: "/admin/rooms", label: "Rooms", icon: Hotel },
+  { href: "/admin/flights", label: "Flights", icon: Plane },
   { href: "/admin/users", label: "Users", icon: Users },
 ];
 // const navItems = [
