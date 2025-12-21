@@ -37,13 +37,19 @@ const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/hotels", label: "Hotels", icon: Hotel },
   { href: "/admin/rooms", label: "Rooms", icon: Hotel },
-  { href: "/admin/packages", label: "Holiday Packages", icon: Palmtree },
-  { href: "/admin/api-manager", label: "Flight & Hotel API", icon: Plane },
-  { href: "/admin/coupons", label: "Offers & Coupons", icon: Tag },
-  { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
   { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
+// const navItems = [
+//   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+//   { href: "/admin/hotels", label: "Hotels", icon: Hotel },
+//   { href: "/admin/rooms", label: "Rooms", icon: Hotel },
+//   { href: "/admin/packages", label: "Holiday Packages", icon: Palmtree },
+//   { href: "/admin/api-manager", label: "Flight & Hotel API", icon: Plane },
+//   { href: "/admin/coupons", label: "Offers & Coupons", icon: Tag },
+//   { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
+//   { href: "/admin/users", label: "Users", icon: Users },
+//   { href: "/admin/settings", label: "Settings", icon: Settings },
+// ];
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation();
