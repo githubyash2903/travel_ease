@@ -47,11 +47,7 @@ export default function FlightDetail() {
           <CardContent className="grid grid-cols-3 items-center">
             <div className="text-center">
               <p className="text-3xl font-bold">{formatIST(flight?.departure)}</p>
-              {/* <p>{flight?.departure.code}</p>
-              <p className="text-xs flex justify-center gap-1">
-                <CalendarIcon className="h-4 w-4" />
-                {flight?.departure || "—"}
-              </p> */}
+              <p>{flight?.source}</p>
             </div>
 
             <div className="flex flex-col items-center">
@@ -63,7 +59,8 @@ export default function FlightDetail() {
 
             <div className="text-center">
               <p className="text-3xl font-bold">{formatIST(flight?.arrival)}</p>
-              {/* <p>{flight?.arrival.code}</p> */}
+               <p>{flight?.destination}</p>
+             
             </div>
           </CardContent>
         </Card>
