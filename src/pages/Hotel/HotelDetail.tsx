@@ -24,7 +24,7 @@ import {
   Info,
 } from "lucide-react";
 import { useState } from "react";
-import {  useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useHotel } from "@/hooks/useHotels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/organisms/ErrorState";
@@ -44,7 +44,7 @@ export default function HotelDetail() {
   const [params] = useSearchParams();
 
   const { data: hotel, isLoading, isError } = useHotel({}, id);
-  const { data: rooms, isLoading: isLoadingRooms } = useRooms({},params, id);
+  const { data: rooms, isLoading: isLoadingRooms } = useRooms({}, params, id);
 
   if (isLoading) return <Skeleton className="h-40 m-8" />;
   if (isError) return <ErrorState message="Hotel not found" />;
@@ -90,7 +90,9 @@ export default function HotelDetail() {
                     <div className="flex items-center gap-4 text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
-                        <span>{hotel?.city},{hotel?.state}</span>
+                        <span>
+                          {hotel?.city},{hotel?.state}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -111,7 +113,9 @@ export default function HotelDetail() {
                 <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {Object.entries(hotel?.amenities)?.map(([amenity], index) => {
-                    const Icon = amenityIcons[amenity] ?? <Info/>;
+                    const Icon =
+                      amenity in amenityIcons ? amenityIcons[amenity] : Info;
+
                     return (
                       <div key={index} className="flex items-center gap-2">
                         <div className="p-2 rounded-lg bg-primary/10">
@@ -130,47 +134,52 @@ export default function HotelDetail() {
               <div className="flex flex-col  gap-4">
                 <h2 className="text-2xl font-semibold mb-4 ">Room Types</h2>
                 {isLoadingRooms && <Skeleton className="h-40 m-8" />}
-                {(isError || rooms?.length===0) && <ErrorState message="Rooms not found" />}
+                {(isError || rooms?.length === 0) && (
+                  <ErrorState message="Rooms not found" />
+                )}
 
-                  {(rooms || [])?.map((room, index) => (
-                    <div key={index}>
-                      <Card>
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle>{room?.type}</CardTitle>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                                <span>{room?.area_sqft} sq ft</span>
-                                {room?.beds?.length>0 &&
+                {(rooms || [])?.map((room, index) => (
+                  <div key={index}>
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle>{room?.type}</CardTitle>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                              <span>{room?.area_sqft} sq ft</span>
+                              {room?.beds?.length > 0 && (
                                 <>
-                                <span>•</span>
-                                <span>{room?.beds?.map((bed) => {
-                                  return `${bed.count} ${bed.type} bed`
-                                })}</span>
+                                  <span>•</span>
+                                  <span>
+                                    {room?.beds?.map((bed) => {
+                                      return `${bed.count} ${bed.type} bed`;
+                                    })}
+                                  </span>
                                 </>
-                              }
-                                <span>•</span>
-                                <span className="flex items-center gap-1">
-                                  <Users className="h-4 w-4" />
-                                  {room?.max_occupancy}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-primary">
-                                ₹{room?.price_per_night}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                per night
-                              </div>
+                              )}
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                {room?.max_occupancy}
+                              </span>
                             </div>
                           </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2">
-                            <p className="font-medium">Room Features:</p>
-                            <div className="grid grid-cols-2 gap-2">
-                              {Object.entries(room?.amenities || {}).map(([feature], idx) => (
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-primary">
+                              ₹{room?.price_per_night}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              per night
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <p className="font-medium">Room Features:</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(room?.amenities || {}).map(
+                              ([feature], idx) => (
                                 <div
                                   key={idx}
                                   className="flex items-center gap-2 text-sm"
@@ -178,13 +187,14 @@ export default function HotelDetail() {
                                   <Check className="h-4 w-4 text-green-600" />
                                   <span>{feature}</span>
                                 </div>
-                              ))}
-                            </div>
+                              )
+                            )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
               </div>
 
               <Separator />
