@@ -1,30 +1,47 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Search } from "lucide-react";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const destinations = [
-  "Bali, Indonesia", "Maldives", "Switzerland", "Dubai, UAE", "Paris, France", 
-  "Thailand", "Greece", "Japan", "Australia", "Singapore"
+  "Kerala",
+  "Manali",
+  "Goa",
+  "Udaipur",
+  "Jaipur",
+  "Meghalaya"
 ];
 
-const packageTypes = [
-  "Honeymoon", "Family", "Adventure", "Beach", "Cultural", "Luxury", "Budget"
-];
+const packageTypes = ["Adventure", "Beach", "Cultural", "Honeymoon", "Family"];
 
 export const HolidaySearch = () => {
+  const navigate = useNavigate();
   const [destination, setDestination] = useState("");
   const [packageType, setPackageType] = useState("");
 
   const handleSearch = () => {
-    if (!destination && !packageType) {
-      toast.error("Please select at least destination or package type");
-      return;
+    const params = new URLSearchParams();
+    if(destination){
+      params.set("destination", destination)
     }
-    toast.success("Searching holiday packages...");
+    if(packageType){
+      params.set("category",packageType)
+    }
+    navigate(`/holidays?${params.toString()}`);
   };
 
   return (
@@ -48,7 +65,10 @@ export const HolidaySearch = () => {
                   <CommandEmpty>No destinations found.</CommandEmpty>
                   <CommandGroup>
                     {destinations.map((dest) => (
-                      <CommandItem key={dest} onSelect={() => setDestination(dest)}>
+                      <CommandItem
+                        key={dest}
+                        onSelect={() => setDestination(dest)}
+                      >
                         {dest}
                       </CommandItem>
                     ))}
@@ -77,7 +97,10 @@ export const HolidaySearch = () => {
                   <CommandEmpty>No package types found.</CommandEmpty>
                   <CommandGroup>
                     {packageTypes.map((type) => (
-                      <CommandItem key={type} onSelect={() => setPackageType(type)}>
+                      <CommandItem
+                        key={type}
+                        onSelect={() => setPackageType(type)}
+                      >
                         {type}
                       </CommandItem>
                     ))}

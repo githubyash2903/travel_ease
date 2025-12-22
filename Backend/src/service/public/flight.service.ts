@@ -59,7 +59,6 @@ export async function listFlights(query: any) {
     if (ranges.length) clauses.push(`(${ranges.join(" OR ")})`);
   }
 
-  // Single-day departure filter. Expects YYYY-MM-DD.
   if (query.date) {
     clauses.push(`departure >= $${i} AND departure < $${i + 1}`);
     const d = new Date(`${query.date}T00:00:00.000Z`);
@@ -69,7 +68,6 @@ export async function listFlights(query: any) {
     i += 2;
   }
 
-  // Explicit departure range
   if (query.departureFrom) {
     clauses.push(`departure >= $${i++}`);
     values.push(new Date(query.departureFrom));
@@ -80,7 +78,6 @@ export async function listFlights(query: any) {
     values.push(new Date(query.departureTo));
   }
 
-  // Arrival range
   if (query.arrivalFrom) {
     clauses.push(`arrival >= $${i++}`);
     values.push(new Date(query.arrivalFrom));
@@ -92,6 +89,19 @@ export async function listFlights(query: any) {
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+
+  /* ---------------- SORT (DATA SAFE) ---------------- */
+
+  const sort = String(query.sort || "departure");
+
+  const sortMap: Record<string, string> = {
+    "price": "price ASC",
+    "price-desc": "price DESC",
+    "duration": "(arrival - departure) ASC",
+    "departure": "departure ASC",
+  };
+
+  const orderBy = sortMap[sort] ?? sortMap["departure"];
 
   const sql = `
     SELECT
@@ -106,7 +116,7 @@ export async function listFlights(query: any) {
       stops
     FROM flights
     ${where}
-    ORDER BY departure ASC
+    ORDER BY ${orderBy}
     LIMIT $${i++} OFFSET $${i}
   `;
 
@@ -115,6 +125,7 @@ export async function listFlights(query: any) {
   const { rows } = await pool.query(sql, values);
   return rows;
 }
+
 
 
 /**

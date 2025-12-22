@@ -38,6 +38,7 @@ const navItems = [
   { href: "/admin/hotels", label: "Hotels", icon: Hotel },
   { href: "/admin/rooms", label: "Rooms", icon: Hotel },
   { href: "/admin/flights", label: "Flights", icon: Plane },
+  { href: "/admin/packages", label: "Holiday Packages", icon: Palmtree },
   { href: "/admin/users", label: "Users", icon: Users },
 ];
 // const navItems = [

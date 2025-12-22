@@ -131,7 +131,7 @@ export default function AdminFlightsPage() {
 
       {/* DETAILS */}
       <Dialog open={!!viewFlight} onOpenChange={() => setViewFlight(null)}>
-        <DialogContent className="max-w-3xl overflow-auto">
+        <DialogContent className="max-w-[80vw] max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>Flight Details</DialogTitle>
           </DialogHeader>

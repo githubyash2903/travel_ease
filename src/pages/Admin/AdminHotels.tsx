@@ -113,7 +113,7 @@ export default function AdminHotelsPage() {
 
       {/* CREATE / EDIT */}
       <Dialog open={!!formHotel} onOpenChange={() => setFormHotel(null)}>
-        <DialogContent className="max-w-3xl overflow-auto h-[95vh]">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>
               {formHotel?.id ? "Edit Hotel" : "Create Hotel"}
@@ -135,7 +135,7 @@ export default function AdminHotelsPage() {
 
       {/* VIEW DETAILS */}
       <Dialog open={!!viewHotel} onOpenChange={() => setViewHotel(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-[80vw] max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>Hotel Details</DialogTitle>
           </DialogHeader>

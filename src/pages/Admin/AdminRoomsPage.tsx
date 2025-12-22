@@ -104,7 +104,7 @@ export default function AdminRoomsPage() {
 
       {/* CREATE / EDIT */}
       <Dialog open={!!formRoom} onOpenChange={() => setFormRoom(null)}>
-        <DialogContent className="max-w-4xl h-[95vh] overflow-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>
               {formRoom?.id ? "Edit Room" : "Create Room"}
@@ -126,7 +126,7 @@ export default function AdminRoomsPage() {
 
       {/* DETAILS */}
       <Dialog open={!!viewRoom} onOpenChange={() => setViewRoom(null)}>
-        <DialogContent className="max-w-3xl  overflow-auto">
+        <DialogContent className="max-w-[80vw] max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>Room Details</DialogTitle>
           </DialogHeader>
