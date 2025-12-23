@@ -3,6 +3,9 @@ import { authClient } from "@/api/axios";
 export const getProfile = async () => {
   return await authClient.get("/user/profile");
 };
+export const getAdminProfile = async () => {
+  return await authClient.get("/admin/profile");
+};
 
 export const updateProfile = async (payload: any) => {
   return await authClient.put("/user/profile", payload);

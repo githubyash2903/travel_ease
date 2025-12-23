@@ -7,11 +7,18 @@ import heroBeach from "@/assets/hero-beach.jpg";
 import { useHolidayPackage } from "@/hooks/useHolidayPackages";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/organisms/ErrorState";
+import { useState } from "react";
+import { useBooking } from "@/hooks/useBookings";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 const HolidayDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const { isAuthenticated } = useAuth();
+  const [startDate, setStartDate] = useState("");
+  const [persons, setPersons] = useState<number | "">("");
+  const booking = useBooking();
   const {
     data: holidayPackage,
     isLoading,
@@ -126,66 +133,70 @@ const HolidayDetail = () => {
 
           <div className="lg:col-span-1">
             <Card className="sticky top-8">
-              <CardContent className="p-6">
-                <div className="mb-6">
-                  <div className="text-sm text-muted-foreground mb-2">
-                    Starting from
-                  </div>
-                  <div className="text-4xl font-bold text-primary mb-1">
-                    ₹{holidayPackage?.price}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    per person
-                  </div>
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
                 </div>
 
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Check-in Date
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full px-3 py-2 border rounded-md"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Number of Travelers
-                    </label>
-                    <select className="w-full px-3 py-2 border rounded-md">
-                      <option>2 Travelers</option>
-                      <option>3 Travelers</option>
-                      <option>4 Travelers</option>
-                      <option>5+ Travelers</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Travelers *
+                  </label>
+                  <input
+                    type="number"
+                    min={holidayPackage.min_persons}
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={persons}
+                    onChange={(e) => setPersons(Number(e.target.value))}
+                  />
                 </div>
 
-                <Button className="w-full mb-3" size="lg">
-                  Book Now
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={!startDate || !persons || booking.package.isPending}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      toast.error("Please login to continue");
+                      navigate("/auth");
+                      return;
+                    }
+                    booking.package.mutate(
+                      {
+                        package_id: holidayPackage.id,
+                        start_date: startDate,
+                        persons,
+                      },
+                      {
+                        onSuccess: () => {
+                          toast.success(
+                            "Holiday booking request successfully, we'll get back to you."
+                          );
+                          navigate("/profile/bookings");
+                        },
+                      }
+                    );
+                  }}
+                >
+                  {booking.package.isPending ? "Booking..." : "Request Booking"}
                 </Button>
 
-                <div className="mt-6 pt-6 border-t space-y-2 text-sm">
+                <div className="pt-4 border-t text-sm space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Package Price</span>
-                    <span className="font-semibold">
-                      ₹{holidayPackage?.price}
-                    </span>
+                    <span>Package</span>
+                    <span>₹{holidayPackage.price}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Taxes & Fees</span>
-                    <span className="font-semibold">
-                      ₹{holidayPackage?.taxes}
-                    </span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t text-base">
-                    <span className="font-semibold">Total Amount</span>
-                    <span className="font-bold text-primary">
-                      ₹
-                      {Number(holidayPackage?.price) +
-                        Number(holidayPackage?.taxes)}
-                    </span>
+                    <span>Taxes</span>
+                    <span>₹{holidayPackage.taxes}</span>
                   </div>
                 </div>
               </CardContent>

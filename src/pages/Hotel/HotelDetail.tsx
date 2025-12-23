@@ -1,34 +1,33 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Star,
   MapPin,
   Wifi,
   Coffee,
   Car,
-  CalendarIcon,
   UtensilsCrossed,
   Users,
   Check,
-  Phone,
-  Mail,
   Info,
 } from "lucide-react";
 import { useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useHotel } from "@/hooks/useHotels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/organisms/ErrorState";
 import { useRooms } from "@/hooks/useRooms";
+import { useBooking } from "@/hooks/useBookings";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 const amenityIcons: Record<string, any> = {
   wifi: Wifi,
@@ -41,8 +40,15 @@ const amenityIcons: Record<string, any> = {
 export default function HotelDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [params] = useSearchParams();
-
+  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [roomsCount, setRoomsCount] = useState<number | "">("");
+  const [guests, setGuests] = useState<number | "">("");
+  const booking = useBooking();
   const { data: hotel, isLoading, isError } = useHotel({}, id);
   const { data: rooms, isLoading: isLoadingRooms } = useRooms({}, params, id);
 
@@ -50,7 +56,7 @@ export default function HotelDetail() {
   if (isError) return <ErrorState message="Hotel not found" />;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen w-full flex flex-col">
       <main className="flex-1 pb-12">
         {/* Image Gallery */}
         <section className="container py-6">
@@ -142,7 +148,7 @@ export default function HotelDetail() {
                   <div key={index}>
                     <Card>
                       <CardHeader>
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between lg:flex-row gap-4 flex-col">
                           <div>
                             <CardTitle>{room?.type}</CardTitle>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
@@ -192,234 +198,118 @@ export default function HotelDetail() {
                           </div>
                         </div>
                       </CardContent>
+                      <CardFooter>
+                        <Button
+                          className="mt-4 w-full"
+                          variant={
+                            selectedRoom?.id === room.id ? "default" : "outline"
+                          }
+                          onClick={() => setSelectedRoom(room)}
+                        >
+                          {selectedRoom?.id === room.id
+                            ? "Selected"
+                            : "Select Room"}
+                        </Button>
+                      </CardFooter>
                     </Card>
                   </div>
                 ))}
               </div>
-
-              <Separator />
-
-              {/* <div>
-                <h2 className="text-2xl font-semibold mb-4">Hotel Policies</h2>
-                <Card>
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="font-medium mb-1">Check-in</p>
-                        <p className="text-sm text-muted-foreground">
-                          {hotel?.policies.checkIn}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-medium mb-1">Check-out</p>
-                        <p className="text-sm text-muted-foreground">
-                          {hotel?.policies.checkOut}
-                        </p>
-                      </div>
-                    </div>
-                    <Separator />
-                    <div>
-                      <p className="font-medium mb-1">Cancellation Policy</p>
-                      <p className="text-sm text-muted-foreground">
-                        {hotel?.policies.cancellation}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-medium mb-1">Children & Extra Beds</p>
-                      <p className="text-sm text-muted-foreground">
-                        {hotel?.policies.children}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-medium mb-1">Pets</p>
-                      <p className="text-sm text-muted-foreground">
-                        {hotel?.policies.pets}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">
-                  Contact Information
-                </h2>
-                <Card>
-                  <CardContent className="pt-6 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-muted-foreground" />
-                      <span>{hotel?.contact.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-5 w-5 text-muted-foreground" />
-                      <span>{hotel?.contact.email}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div> */}
             </div>
-
-            {/* Booking Sidebar 
+            {/* <Separator /> */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-20">
-                <CardHeader>
-                  <CardTitle>Book Your Stay</CardTitle>
-                  <div className="text-3xl font-bold text-primary">
-                    $
-                    <span className="text-sm font-normal text-muted-foreground">
-                      {" "}
-                      / night
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Check-in Date</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !checkIn && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {checkIn ? (
-                            format(checkIn, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={checkIn}
-                          onSelect={setCheckIn}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+              {selectedRoom && (
+                <Card className="mt-6 sticky top-20">
+                  <CardHeader>
+                    <CardTitle>Book {selectedRoom.type}</CardTitle>
+                  </CardHeader>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      Check-out Date
-                    </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !checkOut && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {checkOut ? (
-                            format(checkOut, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={checkOut}
-                          onSelect={setCheckOut}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Room Type</span>
-                      <span className="font-medium">
-                        {hotel?.roomTypes[selectedRoom].name}
-                      </span>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Check-in *</label>
+                      <input
+                        type="date"
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={checkIn}
+                        onChange={(e) => setCheckIn(e.target.value)}
+                      />
                     </div>
-                    {checkIn && checkOut && (
-                      <>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Nights</span>
-                          <span className="font-medium">
-                            {Math.ceil(
-                              (checkOut.getTime() - checkIn.getTime()) /
-                                (1000 * 60 * 60 * 24)
-                            )}
-                          </span>
-                        </div>
-                        <Separator />
-                        <div className="flex justify-between font-semibold">
-                          <span>Total</span>
-                          <span className="text-primary">
-                            $
-                            {hotel?.roomTypes[selectedRoom].price *
-                              Math.ceil(
-                                (checkOut.getTime() - checkIn.getTime()) /
-                                  (1000 * 60 * 60 * 24)
-                              )}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
 
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={() => {
-                      const nights =
-                        checkIn && checkOut
-                          ? Math.ceil(
-                              (checkOut.getTime() - checkIn.getTime()) /
-                                (1000 * 60 * 60 * 24)
-                            )
-                          : 1;
-                      const totalPrice =
-                        hotel?.roomTypes[selectedRoom].price * nights;
+                    <div>
+                      <label className="text-sm font-medium">Check-out *</label>
+                      <input
+                        type="date"
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={checkOut}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                      />
+                    </div>
 
-                      navigate("/checkout", {
-                        state: {
-                          title: hotel?.name,
-                          destination: hotel?.location,
-                          date:
-                            checkIn && checkOut
-                              ? `${format(checkIn, "MMM dd")} - ${format(
-                                  checkOut,
-                                  "MMM dd, yyyy"
-                                )}`
-                              : "Select dates",
-                          basePrice: `$${
-                            hotel?.roomTypes[selectedRoom].price * nights
-                          }`,
-                          taxes: `$${Math.round(totalPrice * 0.1)}`,
-                          totalPrice: `$${
-                            totalPrice + Math.round(totalPrice * 0.1)
-                          }`,
-                          roomType: hotel?.roomTypes[selectedRoom].name,
-                          type: "hotel",
-                        },
-                      });
-                    }}
-                  >
-                    Book Now
-                  </Button>
+                    <div>
+                      <label className="text-sm font-medium">Rooms *</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={roomsCount}
+                        onChange={(e) => setRoomsCount(Number(e.target.value))}
+                      />
+                    </div>
 
-                  <p className="text-xs text-center text-muted-foreground">
-                    Free cancellation up to 24 hours before check-in
-                  </p>
-                </CardContent>
-              </Card>
+                    <div>
+                      <label className="text-sm font-medium">Guests *</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={guests}
+                        onChange={(e) => setGuests(Number(e.target.value))}
+                      />
+                    </div>
+
+                    <Button
+                      className="w-full"
+                      disabled={
+                        !checkIn ||
+                        !checkOut ||
+                        !roomsCount ||
+                        !guests ||
+                        booking.hotel.isPending
+                      }
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          toast.error("Please login to continue");
+                          navigate("/auth");
+                          return;
+                        }
+                        booking.hotel.mutate(
+                          {
+                            hotel_id: hotel.id,
+                            room_id: selectedRoom.id,
+                            check_in: checkIn,
+                            check_out: checkOut,
+                            rooms_count: roomsCount,
+                            guests,
+                          },
+                          {
+                            onSuccess: () => {
+                              toast.success(
+                                "Hotel booking request successfully, we'll get back to you."
+                              );
+                              navigate("/profile/bookings");
+                            },
+                          }
+                        );
+                      }}
+                    >
+                      {booking.hotel.isPending
+                        ? "Booking..."
+                        : "Request Booking"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-            */}
           </div>
         </div>
       </main>

@@ -11,7 +11,7 @@ const AppLayout = () => {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 flex justify-center w-screen">
+      <main className="flex-1 flex justify-center w-screen ">
         <Outlet />
       </main>
 

@@ -26,16 +26,21 @@ const DEP_TIME = [
   { key: "night", label: "Night (12AM - 6AM)" },
 ];
 
-export const FlightFilters = () => {
+export const FlightFilters = ({
+  onApply = () => {},
+}: {
+  onApply?: () => void;
+}) => {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);
 
   const push = useCallback(
     (next: URLSearchParams) => {
+      onApply();
       navigate(`${pathname}?${next.toString()}`, { replace: true });
     },
-    [navigate, pathname],
+    [navigate, pathname]
   );
 
   const toggleMulti = (key: string, value: string) => {
@@ -45,8 +50,8 @@ export const FlightFilters = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     values.includes(value)
-      ? values.filter(v => v !== value).forEach(v => next.append(key, v))
-      : [...values, value].forEach(v => next.append(key, v));
+      ? values.filter((v) => v !== value).forEach((v) => next.append(key, v))
+      : [...values, value].forEach((v) => next.append(key, v));
 
     push(next);
   };
@@ -64,7 +69,7 @@ export const FlightFilters = () => {
         {/* Stops */}
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Stops</Label>
-          {STOPS.map(s => (
+          {STOPS.map((s) => (
             <div key={s.key} className="flex items-center space-x-2">
               <Checkbox
                 checked={params.getAll("stops").includes(s.key)}
@@ -79,7 +84,9 @@ export const FlightFilters = () => {
 
         {/* Price */}
         <div className="flex flex-col gap-2">
-          <Label className="text-sm font-semibold mb-3 block">Price Range</Label>
+          <Label className="text-sm font-semibold mb-3 block">
+            Price Range
+          </Label>
           <Slider
             min={0}
             max={100000}
@@ -103,7 +110,7 @@ export const FlightFilters = () => {
         {/* Airlines */}
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Airlines</Label>
-          {AIRLINES.map(a => (
+          {AIRLINES.map((a) => (
             <div key={a.key} className="flex items-center space-x-2">
               <Checkbox
                 checked={params.getAll("airlines").includes(a.key)}
@@ -118,8 +125,10 @@ export const FlightFilters = () => {
 
         {/* Departure time */}
         <div className="flex flex-col gap-2">
-          <Label className="text-sm font-semibold mb-3 block">Departure Time</Label>
-          {DEP_TIME.map(t => (
+          <Label className="text-sm font-semibold mb-3 block">
+            Departure Time
+          </Label>
+          {DEP_TIME.map((t) => (
             <div key={t.key} className="flex items-center space-x-2">
               <Checkbox
                 checked={params.getAll("depTime").includes(t.key)}

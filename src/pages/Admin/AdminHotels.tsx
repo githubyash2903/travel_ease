@@ -31,7 +31,6 @@ export default function AdminHotelsPage() {
 
   const [formHotel, setFormHotel] = useState<any>(null);
   const [viewHotel, setViewHotel] = useState<any>(null);
-    console.log(formHotel,data)
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">

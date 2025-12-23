@@ -22,7 +22,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/v1/public', publicRouter);
 app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/user', authenticate, authorize(['USER', 'ADMIN']), userRouter);
+app.use('/api/v1/user', authenticate, authorize(['USER']), userRouter);
 app.use('/api/v1/admin', authenticate, authorize(['ADMIN']), adminRouter);
 
 app.get('/api/health', (_req, res) => {

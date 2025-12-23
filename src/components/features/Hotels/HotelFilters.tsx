@@ -20,6 +20,7 @@ type HotelFiltersProps = {
     step?: number;
   };
   ratings?: number[];
+  onApply?: () => void;
 };
 
 export const HotelFilters = ({
@@ -32,6 +33,7 @@ export const HotelFilters = ({
   ],
   price = { min: 0, max: 20000, step: 500 },
   ratings = [5, 4, 3, 2],
+  onApply = () => {},
 }: HotelFiltersProps) => {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
@@ -40,17 +42,17 @@ export const HotelFilters = ({
 
   const pushParams = useCallback(
     (next: URLSearchParams) => {
+      onApply();
       navigate(`${pathname}?${next.toString()}`, { replace: true });
     },
-    [navigate, pathname],
+    [navigate, pathname]
   );
 
   const minPrice = Number(params.get("minPrice") ?? price.min);
   const maxPrice = Number(params.get("maxPrice") ?? price.max);
   const minRating = params.get("minRating");
 
-  const hasAmenity = (key: string) =>
-    params.getAll("amenities").includes(key);
+  const hasAmenity = (key: string) => params.getAll("amenities").includes(key);
 
   const toggleAmenity = (key: string) => {
     const next = new URLSearchParams(params);
@@ -59,8 +61,10 @@ export const HotelFilters = ({
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     values.includes(key)
-      ? values.filter(v => v !== key).forEach(v => next.append("amenities", v))
-      : [...values, key].forEach(v => next.append("amenities", v));
+      ? values
+          .filter((v) => v !== key)
+          .forEach((v) => next.append("amenities", v))
+      : [...values, key].forEach((v) => next.append("amenities", v));
 
     pushParams(next);
   };
@@ -103,7 +107,7 @@ export const HotelFilters = ({
             Star Rating
           </Label>
           <div className="space-y-2">
-            {ratings.map(r => (
+            {ratings.map((r) => (
               <div key={r} className="flex items-center space-x-2">
                 <Checkbox
                   checked={minRating === String(r)}
@@ -129,11 +133,9 @@ export const HotelFilters = ({
 
         {/* Amenities */}
         <div>
-          <Label className="text-sm font-semibold mb-3 block">
-            Amenities
-          </Label>
+          <Label className="text-sm font-semibold mb-3 block">Amenities</Label>
           <div className="space-y-2">
-            {amenities.map(a => (
+            {amenities.map((a) => (
               <div key={a.key} className="flex items-center space-x-2">
                 <Checkbox
                   checked={hasAmenity(a.key)}
@@ -149,9 +151,7 @@ export const HotelFilters = ({
 
         {/* Sort */}
         <div>
-          <Label className="text-sm font-semibold mb-3 block">
-            Sort By
-          </Label>
+          <Label className="text-sm font-semibold mb-3 block">Sort By</Label>
           <div className="space-y-2">
             {[
               ["rating_desc", "Rating: High to Low"],
@@ -166,9 +166,7 @@ export const HotelFilters = ({
                   onCheckedChange={(checked) => {
                     const next = new URLSearchParams(params);
                     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                    checked
-                      ? next.set("sort", value)
-                      : next.delete("sort");
+                    checked ? next.set("sort", value) : next.delete("sort");
                     pushParams(next);
                   }}
                 />

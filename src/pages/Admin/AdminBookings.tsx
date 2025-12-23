@@ -133,7 +133,7 @@ export default function AdminBookings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-all-bookings"] });
-      ({ title: "Success", description: "Booking status updated" });
+      // ({ title: "Success", description: "Booking status updated" });
       if (selectedBooking) {
         setSelectedBooking(null); // Close dialog or update local state
       }

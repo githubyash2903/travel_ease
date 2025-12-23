@@ -1,7 +1,7 @@
 import { Migration } from '../../migrate';
 
 export const holidayPackagesTable: Migration = {
-  id: 7,
+  id: 5,
   name: 'holiday_packages',
   up: `
     CREATE TABLE IF NOT EXISTS holiday_packages (

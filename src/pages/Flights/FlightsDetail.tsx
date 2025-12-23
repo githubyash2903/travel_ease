@@ -9,6 +9,10 @@ import { Plane, Calendar as CalendarIcon } from "lucide-react";
 import { useFlight } from "@/hooks/useFlights";
 import { formatIST } from "@/utils/time";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useBooking } from "@/hooks/useBookings";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 type SearchData = {
   from?: string;
@@ -18,16 +22,16 @@ type SearchData = {
   cabinClass?: string;
 };
 
-
 export default function FlightDetail() {
   const { id } = useParams();
+    const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [seats, setSeats] = useState<number | "">("");
+  const booking = useBooking();
 
   const { data: flight, isLoading } = useFlight({}, id);
-  if(isLoading){
-    return (
-      <Skeleton className="h-[50vh] w-full rounded-md"/>
-    )
+  if (isLoading) {
+    return <Skeleton className="h-[50vh] w-full rounded-md" />;
   }
   return (
     <div className="container py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -38,15 +42,14 @@ export default function FlightDetail() {
           <CardHeader className="flex justify-between flex-row">
             <div>
               <CardTitle>{flight?.airline}</CardTitle>
-              {/* <p className="text-sm text-muted-foreground">
-                Flight ID: {flight?.id.slice(0, 6)}
-              </p> */}
             </div>
           </CardHeader>
 
           <CardContent className="grid grid-cols-3 items-center">
             <div className="text-center">
-              <p className="text-3xl font-bold">{formatIST(flight?.departure)}</p>
+              <p className="text-3xl font-bold">
+                {formatIST(flight?.departure)}
+              </p>
               <p>{flight?.source}</p>
             </div>
 
@@ -59,8 +62,7 @@ export default function FlightDetail() {
 
             <div className="text-center">
               <p className="text-3xl font-bold">{formatIST(flight?.arrival)}</p>
-               <p>{flight?.destination}</p>
-             
+              <p>{flight?.destination}</p>
             </div>
           </CardContent>
         </Card>
@@ -102,35 +104,58 @@ export default function FlightDetail() {
           <CardTitle>Booking Summary</CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <div className="flex justify-between text-sm">
             <span>Route</span>
             <span>
-              {flight?.source} → {flight?.destination}
+              {flight.source} → {flight.destination}
             </span>
           </div>
 
-          <div className="flex justify-between text-sm">
-            <span>Date</span>
-            <span>{formatIST(flight?.departure) || "—"}</span>
-          </div>
-
-          <div className="flex justify-between text-sm">
-            <span>Travellers</span>
-            <span>1</span>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Seats *</label>
+            <input
+              type="number"
+              min={1}
+              className="w-full px-3 py-2 border rounded-md"
+              value={seats}
+              onChange={(e) => setSeats(Number(e.target.value))}
+            />
           </div>
 
           <Separator />
 
           <div className="flex justify-between font-semibold">
-            <span>Total</span>
-            <span className="text-primary">₹{flight?.price}</span>
+            <span>Price / Seat</span>
+            <span>₹{flight.price}</span>
           </div>
 
           <Button
             className="w-full"
+            disabled={!seats || booking?.flight?.isPending}
+            onClick={() => {
+              if (!isAuthenticated) {
+                toast.error("Please login to continue");
+                navigate("/auth");
+                return;
+              }
+              booking.flight.mutate(
+                {
+                  flight_id: flight.id,
+                  seats,
+                },
+                {
+                  onSuccess: () => {
+                    toast.success(
+                      "Flight booking request successfully, we'll get back to you."
+                    );
+                    navigate("/profile/bookings");
+                  },
+                }
+              );
+            }}
           >
-            Continue to Book
+            {booking?.flight?.isPending ? "Booking..." : "Request Booking"}
           </Button>
         </CardContent>
       </Card>

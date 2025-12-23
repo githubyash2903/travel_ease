@@ -15,6 +15,8 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 
 export async function list(req: Request, res: Response, next: NextFunction) {
   try {
+    const adminId = (req as any).user.id;
+    console.log(adminId)
     const flights = await service.listFlights(req.query);
     return success(res, flights);
   } catch (e) {

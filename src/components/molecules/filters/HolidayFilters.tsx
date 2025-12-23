@@ -1,11 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -22,16 +17,21 @@ const CATEGORIES = ["Adventure", "Beach", "Cultural", "Honeymoon", "Family"];
 
 const INCLUSIONS = ["Flights", "Hotels", "Meals", "Sightseeing", "Transfers"];
 
-export const HolidayFilters = () => {
+export const HolidayFilters = ({
+  onApply = () => {},
+}: {
+  onApply?: () => void;
+}) => {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);
 
   const push = useCallback(
     (next: URLSearchParams) => {
+      onApply();
       navigate(`${pathname}?${next.toString()}`, { replace: true });
     },
-    [navigate, pathname],
+    [navigate, pathname]
   );
 
   const toggleMulti = (key: string, value: string) => {
@@ -41,8 +41,8 @@ export const HolidayFilters = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     values.includes(value)
-      ? values.filter(v => v !== value).forEach(v => next.append(key, v))
-      : [...values, value].forEach(v => next.append(key, v));
+      ? values.filter((v) => v !== value).forEach((v) => next.append(key, v))
+      : [...values, value].forEach((v) => next.append(key, v));
 
     push(next);
   };
@@ -83,7 +83,7 @@ export const HolidayFilters = () => {
         {/* Duration */}
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Duration</Label>
-          {DURATION.map(d => (
+          {DURATION.map((d) => (
             <div key={d.key} className="flex items-center space-x-2">
               <Checkbox
                 checked={params.getAll("duration").includes(d.key)}
@@ -98,8 +98,10 @@ export const HolidayFilters = () => {
 
         {/* Category */}
         <div className="flex flex-col gap-2">
-          <Label className="text-sm font-semibold mb-3 block">Package Type</Label>
-          {CATEGORIES.map(c => (
+          <Label className="text-sm font-semibold mb-3 block">
+            Package Type
+          </Label>
+          {CATEGORIES.map((c) => (
             <div key={c} className="flex items-center space-x-2">
               <Checkbox
                 checked={params.getAll("category").includes(c)}
@@ -115,7 +117,7 @@ export const HolidayFilters = () => {
         {/* Inclusions */}
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-semibold mb-3 block">Inclusions</Label>
-          {INCLUSIONS.map(i => (
+          {INCLUSIONS.map((i) => (
             <div key={i} className="flex items-center space-x-2">
               <Checkbox
                 checked={params.getAll("inclusions").includes(i)}

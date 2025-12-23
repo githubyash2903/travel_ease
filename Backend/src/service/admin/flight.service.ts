@@ -50,7 +50,7 @@ export async function listFlights(query: any) {
   let i = 1;
 
   clauses.push(`is_active = true`);
-console.log(query,'query')
+
   // Stops
   if (query.stops) {
     clauses.push(`stops = ANY($${i++})`);

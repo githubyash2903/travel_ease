@@ -3,13 +3,13 @@ import type { RouteObject } from "react-router-dom";
 import AdminDashboard from "@/pages/Admin/AdminDashboard";
 import AdminUsers from "@/pages/Admin/AdminUsers";
 import AdminCoupons from "@/pages/Admin/AdminCoupons";
-import AdminBookings from "@/pages/Admin/AdminBookings";
 import AdminSettings from "@/pages/Admin/AdminSettings";
 import AdminAPIManager from "@/pages/Admin/AdminAPIManager";
 import AdminHotelsPage from "@/pages/Admin/AdminHotels";
 import AdminRoomsPage from "@/pages/Admin/AdminRoomsPage";
 import AdminFlightsPage from "@/pages/Admin/AdminFlightsPage";
 import AdminHolidayPackagesPage from "@/pages/Admin/AdminHolidayPackagesPage";
+import AdminBookingsPage from "@/pages/Admin/AdminBookingsPage";
 
 const adminRoutes: RouteObject[] = [
   {
@@ -38,7 +38,7 @@ const adminRoutes: RouteObject[] = [
   },
   {
     path: "bookings",
-    element: <AdminBookings />,
+    element: <AdminBookingsPage />,
   },
   {
     path: "settings",

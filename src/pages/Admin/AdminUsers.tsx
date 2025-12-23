@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/api/axios";
 
@@ -21,27 +21,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import {
-  Search,
-  Eye,
-  Mail,
-  Phone,
-  Calendar,
-  ShieldCheck,
-} from "lucide-react";
+import { Search, Eye, Mail, Phone, Calendar, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { fetchAllUsers } from "@/api/admin/users";
+import { useSearchParams } from "react-router-dom";
 
 export default function AdminUsers() {
+  const [params] = useSearchParams();
+  const focusUserId = params.get("focus");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-all-users"],
     queryFn: fetchAllUsers,
-    select: (data:any) => data?.data?.data,
+    select: (data: any) => data?.data?.data,
   });
-
 
   const filteredUsers = (users || []).filter(
     (user) =>
@@ -64,6 +59,12 @@ export default function AdminUsers() {
     }
     return <Badge variant="secondary">Active</Badge>;
   };
+  useEffect(() => {
+    if (!focusUserId || !users?.length) return;
+
+    const user = users.find((u: any) => u.id === focusUserId);
+    if (user) setSelectedUser(user);
+  }, [focusUserId, users]);
 
   return (
     <div className="space-y-6">
@@ -189,7 +190,8 @@ export default function AdminUsers() {
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
                   <p className="font-medium">
-                    {selectedUser?.phone_country_code} {selectedUser?.phone_number}
+                    {selectedUser?.phone_country_code}{" "}
+                    {selectedUser?.phone_number}
                   </p>
                 </div>
                 <div>

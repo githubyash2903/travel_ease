@@ -10,7 +10,7 @@ interface HolidayPackageCardProps {
   destination: string;
   duration_days: string;
   duration_nights:string;
-  image: string;
+  cover_image: string;
   price: number;
   rating: number;
   inclusions: string[];
@@ -23,7 +23,7 @@ export const HolidayPackageCard = ({
   destination,
   duration_days,
   duration_nights,
-  image,
+  cover_image,
   price,
   rating,
   inclusions,
@@ -33,7 +33,7 @@ export const HolidayPackageCard = ({
     <Card className="overflow-hidden hover:shadow-elegant transition-all duration-300 group">
       <div className="relative h-48 overflow-hidden">
         <img
-          src={image}
+          src={cover_image}
           alt={title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
