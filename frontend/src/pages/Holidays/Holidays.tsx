@@ -31,11 +31,10 @@ const Holidays = () => {
     [navigate, pathname]
   );
 
-  const { data: holidayPackages, isLoading } =
-    useHolidayPackages({}, params);
+  const { data: holidayPackages, isLoading } = useHolidayPackages({}, params);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-screen">
       <main className="flex-1 container py-8">
         {/* HEADER */}
         <div className="mb-6 text-center">
@@ -64,17 +63,13 @@ const Holidays = () => {
                 </SheetTrigger>
 
                 <SheetContent side="left" className="w-80 p-4">
-                  <HolidayFilters
-                    onApply={() => setFiltersOpen(false)}
-                  />
+                  <HolidayFilters onApply={() => setFiltersOpen(false)} />
                 </SheetContent>
               </Sheet>
 
               {/* SORT */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Sort by:
-                </span>
+                <span className="text-sm text-muted-foreground">Sort by:</span>
                 <Select
                   value={params.get("sort") ?? "popularity"}
                   onValueChange={(v) => {
@@ -87,12 +82,8 @@ const Holidays = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="popularity">
-                      Popularity
-                    </SelectItem>
-                    <SelectItem value="price">
-                      Price: Low to High
-                    </SelectItem>
+                    <SelectItem value="popularity">Popularity</SelectItem>
+                    <SelectItem value="price">Price: Low to High</SelectItem>
                     <SelectItem value="price-desc">
                       Price: High to Low
                     </SelectItem>
@@ -104,24 +95,23 @@ const Holidays = () => {
             </div>
 
             {/* GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {isLoading ? (
-                <Skeleton className="h-[40vh] w-full rounded-md" />
-              ) : holidayPackages?.length === 0 ? (
-                <div className="col-span-full text-center">
-                  <h1 className="text-3xl font-bold mb-2">
-                    No Packages Found
-                  </h1>
-                  <p className="text-muted-foreground">
-                    Try changing your filters
-                  </p>
-                </div>
-              ) : (
-                (holidayPackages || []).map((pkg, idx) => (
+
+            {isLoading ? (
+              <Skeleton className="h-[40vh] w-full rounded-md" />
+            ) : holidayPackages?.length === 0 ? (
+              <div className="col-span-full text-center">
+                <h1 className="text-3xl font-bold mb-2">No Packages Found</h1>
+                <p className="text-muted-foreground">
+                  Try changing your filters
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(holidayPackages || []).map((pkg, idx) => (
                   <HolidayPackageCard key={idx} {...pkg} />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>

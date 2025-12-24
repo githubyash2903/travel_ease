@@ -18,7 +18,7 @@ const Hotels = () => {
   const { data: hotels, isLoading } = useHotels({}, params);
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
+    <div className="min-h-screen w-screen flex flex-col">
       <main className="flex-1 container py-8">
         {/* HEADER */}
         <div className="mb-6">
