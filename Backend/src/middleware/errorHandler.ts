@@ -8,14 +8,14 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ) {
-  // Zod validation error
+  // Zod v4 validation error
   if (err instanceof ZodError) {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: err.errors.map((e) => ({
-        field: e.path.join('.'),
-        message: e.message,
+      errors: err.issues.map((issue) => ({
+        field: issue.path.map(String).join('.'),
+        message: issue.message,
       })),
     });
   }
