@@ -4,6 +4,9 @@ import { AppError } from "../../utils/errors";
 /**
  * List Flights (Admin)
  */
+/**
+ * List Flights (Admin)
+ */
 export async function listFlights(query: any) {
   const page = Math.max(Number(query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(query.limit) || 100, 1), 100);
@@ -13,7 +16,11 @@ export async function listFlights(query: any) {
   const values: any[] = [];
   let i = 1;
 
+  // Only active flights
   clauses.push(`is_active = true`);
+
+  // Only current + future flights (UTC, DB time)
+  clauses.push(`departure >= NOW()`);
 
   if (query.stops) {
     clauses.push(`stops = ANY($${i++})`);
@@ -50,10 +57,14 @@ export async function listFlights(query: any) {
     const ranges: string[] = [];
 
     buckets.forEach((b: string) => {
-      if (b === "morning") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 6 AND 11`);
-      if (b === "afternoon") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 12 AND 17`);
-      if (b === "evening") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 18 AND 23`);
-      if (b === "night") ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 0 AND 5`);
+      if (b === "morning")
+        ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 6 AND 11`);
+      if (b === "afternoon")
+        ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 12 AND 17`);
+      if (b === "evening")
+        ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 18 AND 23`);
+      if (b === "night")
+        ranges.push(`EXTRACT(HOUR FROM departure) BETWEEN 0 AND 5`);
     });
 
     if (ranges.length) clauses.push(`(${ranges.join(" OR ")})`);
@@ -88,19 +99,15 @@ export async function listFlights(query: any) {
     values.push(new Date(query.arrivalTo));
   }
 
-  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
-
-  /* ---------------- SORT (DATA SAFE) ---------------- */
+  const where = `WHERE ${clauses.join(" AND ")}`;
 
   const sort = String(query.sort || "departure");
-
   const sortMap: Record<string, string> = {
-    "price": "price ASC",
+    price: "price ASC",
     "price-desc": "price DESC",
-    "duration": "(arrival - departure) ASC",
-    "departure": "departure ASC",
+    duration: "(arrival - departure) ASC",
+    departure: "departure ASC",
   };
-
   const orderBy = sortMap[sort] ?? sortMap["departure"];
 
   const sql = `
@@ -125,8 +132,6 @@ export async function listFlights(query: any) {
   const { rows } = await pool.query(sql, values);
   return rows;
 }
-
-
 
 /**
  * Get Flights By ID

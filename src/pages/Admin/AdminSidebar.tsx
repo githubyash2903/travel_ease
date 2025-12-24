@@ -28,6 +28,7 @@ import {
   LogOut,
   User,
   ChevronDown,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -43,6 +44,7 @@ const navItems = [
   { href: "/admin/packages", label: "Holiday Packages", icon: Palmtree },
   { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/contact-messages", label: "Contact Messages", icon: Mail },
 ];
 
 

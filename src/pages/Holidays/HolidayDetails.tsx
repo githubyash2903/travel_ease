@@ -7,10 +7,14 @@ import heroBeach from "@/assets/hero-beach.jpg";
 import { useHolidayPackage } from "@/hooks/useHolidayPackages";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/organisms/ErrorState";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBooking } from "@/hooks/useBookings";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import {
+  Traveller,
+  TravellersForm,
+} from "@/components/features/Bookings/TravellersForm";
 
 const HolidayDetail = () => {
   const { id } = useParams();
@@ -18,12 +22,25 @@ const HolidayDetail = () => {
   const { isAuthenticated } = useAuth();
   const [startDate, setStartDate] = useState("");
   const [persons, setPersons] = useState<number | "">("");
+  const [travellers, setTravellers] = useState<Traveller[]>([]);
+
+  useEffect(() => {
+    setTravellers((prev) => prev.slice(0, persons || 0));
+    if (persons && travellers.length < persons) {
+      setTravellers((prev) => [
+        ...prev,
+        ...Array.from({ length: persons - prev.length }).map(() => ({})),
+      ]);
+    }
+  }, [persons]);
   const booking = useBooking();
   const {
     data: holidayPackage,
     isLoading,
     isError,
   } = useHolidayPackage({}, id);
+  // add near top of component
+  const today = new Date().toISOString().slice(0, 10);
 
   if (isLoading) return <Skeleton className="h-40 m-8" />;
   if (isError) return <ErrorState message="Package not found" />;
@@ -134,12 +151,14 @@ const HolidayDetail = () => {
           <div className="lg:col-span-1">
             <Card className="sticky top-8">
               <CardContent className="p-6 space-y-4">
+                {/* Start Date */}
                 <div>
                   <label className="text-sm font-medium mb-1 block">
                     Start Date *
                   </label>
                   <input
                     type="date"
+                    min={today}
                     className="w-full px-3 py-2 border rounded-md"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
@@ -158,15 +177,32 @@ const HolidayDetail = () => {
                     onChange={(e) => setPersons(Number(e.target.value))}
                   />
                 </div>
-
+                <TravellersForm
+                  count={Number(persons)}
+                  value={travellers}
+                  onChange={setTravellers}
+                />
                 <Button
                   className="w-full"
                   size="lg"
-                  disabled={!startDate || !persons || booking.package.isPending}
+                  disabled={
+                    !startDate ||
+                    !persons ||
+                    travellers.length !== persons ||
+                    booking.package.isPending
+                  }
                   onClick={() => {
                     if (!isAuthenticated) {
                       toast.error("Please login to continue");
                       navigate("/auth");
+                      return;
+                    }
+                    if (startDate < today) {
+                      toast.error("Start date must be today or later");
+                      return;
+                    }
+                    if(travellers.length !== persons){
+                      toast.error("Please fill all travellers details");
                       return;
                     }
                     booking.package.mutate(
@@ -174,6 +210,7 @@ const HolidayDetail = () => {
                         package_id: holidayPackage.id,
                         start_date: startDate,
                         persons,
+                        travellers,
                       },
                       {
                         onSuccess: () => {

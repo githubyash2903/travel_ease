@@ -2,23 +2,51 @@ import pool from '../../database/db';
 import { AppError } from '../../utils/errors';
 
 /* ---------------- HOTEL ---------------- */
+async function insertTravellers(
+  client: any,
+  bookingId: string,
+  travellers: any[]
+) {
+  for (const t of travellers) {
+    await client.query(
+      `
+      INSERT INTO booking_travellers
+        (booking_id, full_name, age, gender, id_proof_type, id_proof_number)
+      VALUES ($1,$2,$3,$4,$5,$6)
+      `,
+      [
+        bookingId,
+        t.full_name,
+        t.age,
+        t.gender,
+        t.id_proof_type,
+        t.id_proof_number,
+      ]
+    );
+  }
+}
 
 export async function createHotelBooking(userId: string, data: any) {
+  if (data.travellers.length !== data.guests)
+    throw new AppError("Traveller count must match guests", 400);
+
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     const roomRes = await client.query(
-      `SELECT price_per_night FROM rooms WHERE id = $1 AND is_active = true`,
+      `SELECT price_per_night FROM rooms WHERE id=$1 AND is_active=true`,
       [data.room_id]
     );
-    if (!roomRes.rowCount) throw new AppError('Room not found', 404);
+    if (!roomRes.rowCount) throw new AppError("Room not found", 404);
 
     const nights =
-      (new Date(data.check_out).getTime() - new Date(data.check_in).getTime()) /
-      (1000 * 60 * 60 * 24);
+      (new Date(data.check_out).getTime() -
+        new Date(data.check_in).getTime()) /
+      86400000;
 
-    const base = nights * data.rooms_count * Number(roomRes.rows[0].price_per_night);
+    const base =
+      nights * data.rooms_count * Number(roomRes.rows[0].price_per_night);
 
     const bookingRes = await client.query(
       `
@@ -48,28 +76,34 @@ export async function createHotelBooking(userId: string, data: any) {
       ]
     );
 
-    await client.query('COMMIT');
+    await insertTravellers(client, bookingRes.rows[0].id, data.travellers);
+
+    await client.query("COMMIT");
     return bookingRes.rows[0];
   } catch (e) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw e;
   } finally {
     client.release();
   }
 }
 
+
 /* ---------------- FLIGHT ---------------- */
 
 export async function createFlightBooking(userId: string, data: any) {
+  if (data.travellers.length !== data.seats)
+    throw new AppError("Traveller count must match seats", 400);
+
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     const flightRes = await client.query(
-      `SELECT price FROM flights WHERE id = $1 AND is_active = true`,
+      `SELECT price FROM flights WHERE id=$1 AND is_active=true`,
       [data.flight_id]
     );
-    if (!flightRes.rowCount) throw new AppError('Flight not found', 404);
+    if (!flightRes.rowCount) throw new AppError("Flight not found", 404);
 
     const base = data.seats * Number(flightRes.rows[0].price);
 
@@ -97,54 +131,74 @@ export async function createFlightBooking(userId: string, data: any) {
       ]
     );
 
-    await client.query('COMMIT');
+    await insertTravellers(client, bookingRes.rows[0].id, data.travellers);
+
+    await client.query("COMMIT");
     return bookingRes.rows[0];
   } catch (e) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw e;
   } finally {
     client.release();
   }
 }
 
+
 /* ---------------- PACKAGE ---------------- */
 
 export async function createPackageBooking(userId: string, data: any) {
-  const pkgRes = await pool.query(
-    `SELECT price FROM holiday_packages WHERE id = $1 AND is_active = true`,
-    [data.package_id]
-  );
-  if (!pkgRes.rowCount) throw new AppError('Package not found', 404);
+  if (data.travellers.length !== data.persons)
+    throw new AppError("Traveller count must match persons", 400);
 
-  const base = data.persons * Number(pkgRes.rows[0].price);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  const bookingRes = await pool.query(
-    `
-    INSERT INTO bookings
-      (user_id, booking_type, base_amount, total_amount)
-    VALUES ($1,'PACKAGE',$2,$2)
-    RETURNING *
-    `,
-    [userId, base]
-  );
+    const pkgRes = await client.query(
+      `SELECT price FROM holiday_packages WHERE id=$1 AND is_active=true`,
+      [data.package_id]
+    );
+    if (!pkgRes.rowCount) throw new AppError("Package not found", 404);
 
-  await pool.query(
-    `
-    INSERT INTO package_booking_details
-      (booking_id, package_id, start_date, persons, price_per_person)
-    VALUES ($1,$2,$3,$4,$5)
-    `,
-    [
-      bookingRes.rows[0].id,
-      data.package_id,
-      data.start_date,
-      data.persons,
-      pkgRes.rows[0].price,
-    ]
-  );
+    const base = data.persons * Number(pkgRes.rows[0].price);
 
-  return bookingRes.rows[0];
+    const bookingRes = await client.query(
+      `
+      INSERT INTO bookings
+        (user_id, booking_type, base_amount, total_amount)
+      VALUES ($1,'PACKAGE',$2,$2)
+      RETURNING *
+      `,
+      [userId, base]
+    );
+
+    await client.query(
+      `
+      INSERT INTO package_booking_details
+        (booking_id, package_id, start_date, persons, price_per_person)
+      VALUES ($1,$2,$3,$4,$5)
+      `,
+      [
+        bookingRes.rows[0].id,
+        data.package_id,
+        data.start_date,
+        data.persons,
+        pkgRes.rows[0].price,
+      ]
+    );
+
+    await insertTravellers(client, bookingRes.rows[0].id, data.travellers);
+
+    await client.query("COMMIT");
+    return bookingRes.rows[0];
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
 }
+
 
 /* ---------------- READ ---------------- */
 
@@ -160,6 +214,7 @@ export async function listMyBookings(userId: string) {
   );
   return rows;
 }
+
 
 export async function getMyBookingById(userId: string, bookingId: string) {
   const { rows } = await pool.query(

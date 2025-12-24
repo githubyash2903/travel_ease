@@ -91,6 +91,7 @@ export const LoginSignup = () => {
               ? "/admin"
               : "/profile"
           );
+          window.location.reload();
         },
         onError: (err: any) => {
           setError(err?.message || "Login failed");

@@ -7,6 +7,7 @@ import holidayPackageRouter from './holidayPackage.router';
 import bookingRouter from './bookings.router';
 import profileRouter from './profile.router';
 import statsRouter from './stats.router';
+import contactRouter from './contact.router';
 
 
 const adminRouter = Router();
@@ -19,7 +20,7 @@ adminRouter.use('/flights', flightRouter);
 adminRouter.use('/holiday-packages', holidayPackageRouter);
 adminRouter.use('/bookings', bookingRouter);
 adminRouter.use('/stats', statsRouter);
-
+adminRouter.use('/contact-messages', contactRouter);
 
 
 export default adminRouter;

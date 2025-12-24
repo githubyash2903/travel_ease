@@ -10,6 +10,8 @@ import { hotelBookingDetailsTable } from "./schemas/bookings/007_hotel_bookings"
 import { flightBookingDetailsTable } from "./schemas/bookings/008_flight_bookings";
 import { packageBookingDetailsTable } from "./schemas/bookings/009_package_bookings";
 import { bookingEnums } from "./schemas/000_bookings_enums";
+import { travellersTable } from "./schemas/bookings/010_booking_travellers";
+import { contactMessagesTable } from "./schemas/support/011_contact_messages";
 // import other schemas here
 
 export class DatabaseInitializer {
@@ -40,6 +42,8 @@ export class DatabaseInitializer {
       hotelBookingDetailsTable,
       flightBookingDetailsTable,
       packageBookingDetailsTable,
+      travellersTable,
+      contactMessagesTable
     ]);
   }
 }

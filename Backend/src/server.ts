@@ -11,6 +11,7 @@ import userRouter from './router/userRouter';
 import adminRouter from './router/adminRouter';
 import { authenticate } from './middleware/auth';
 import { authorize } from './middleware/authorize';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use((err: any, _req: any, res: any,) => {
   // console.error(err);
   res.status(500).json({ message: 'Internal Server Error' });
 });
+app.use(errorHandler);
 
 async function startServer() {
   try {

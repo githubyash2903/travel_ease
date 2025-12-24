@@ -18,4 +18,6 @@ export const loginUser = async (payload: {
 export const logoutUser = async () => {
   localStorage.removeItem('token');
   localStorage.removeItem('role');
+  window.location.reload();
+
 };

@@ -19,7 +19,7 @@ import {
   Check,
   Info,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useHotel } from "@/hooks/useHotels";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +28,10 @@ import { useRooms } from "@/hooks/useRooms";
 import { useBooking } from "@/hooks/useBookings";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import {
+  Traveller,
+  TravellersForm,
+} from "@/components/features/Bookings/TravellersForm";
 
 const amenityIcons: Record<string, any> = {
   wifi: Wifi,
@@ -48,9 +52,23 @@ export default function HotelDetail() {
   const [checkOut, setCheckOut] = useState("");
   const [roomsCount, setRoomsCount] = useState<number | "">("");
   const [guests, setGuests] = useState<number | "">("");
+  const [travellers, setTravellers] = useState<Traveller[]>([]);
   const booking = useBooking();
   const { data: hotel, isLoading, isError } = useHotel({}, id);
   const { data: rooms, isLoading: isLoadingRooms } = useRooms({}, params, id);
+
+  /* keep travellers array in sync with guests */
+  useEffect(() => {
+    setTravellers((prev) => prev.slice(0, guests || 0));
+    if (guests && travellers.length < guests) {
+      setTravellers((prev) => [
+        ...prev,
+        ...Array.from({ length: guests - prev.length }).map(() => ({})),
+      ]);
+    }
+  }, [guests]);
+  // add near top of component
+  const today = new Date().toISOString().slice(0, 10);
 
   if (isLoading) return <Skeleton className="h-40 m-8" />;
   if (isError) return <ErrorState message="Hotel not found" />;
@@ -217,6 +235,7 @@ export default function HotelDetail() {
               </div>
             </div>
             {/* <Separator /> */}
+            {/* Book hotel room form */}
             <div className="lg:col-span-1">
               {selectedRoom && (
                 <Card className="mt-6 sticky top-20">
@@ -225,22 +244,35 @@ export default function HotelDetail() {
                   </CardHeader>
 
                   <CardContent className="space-y-4">
+                    {/* Check-in */}
                     <div>
                       <label className="text-sm font-medium">Check-in *</label>
                       <input
                         type="date"
+                        min={today}
                         className="w-full px-3 py-2 border rounded-md"
                         value={checkIn}
-                        onChange={(e) => setCheckIn(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setCheckIn(value);
+
+                          // reset checkout if invalid
+                          if (checkOut && checkOut <= value) {
+                            setCheckOut("");
+                          }
+                        }}
                       />
                     </div>
 
+                    {/* Check-out */}
                     <div>
                       <label className="text-sm font-medium">Check-out *</label>
                       <input
                         type="date"
+                        min={checkIn || today}
                         className="w-full px-3 py-2 border rounded-md"
                         value={checkOut}
+                        disabled={!checkIn}
                         onChange={(e) => setCheckOut(e.target.value)}
                       />
                     </div>
@@ -266,7 +298,11 @@ export default function HotelDetail() {
                         onChange={(e) => setGuests(Number(e.target.value))}
                       />
                     </div>
-
+                    <TravellersForm
+                      count={Number(guests)}
+                      value={travellers}
+                      onChange={setTravellers}
+                    />
                     <Button
                       className="w-full"
                       disabled={
@@ -274,12 +310,21 @@ export default function HotelDetail() {
                         !checkOut ||
                         !roomsCount ||
                         !guests ||
+                        travellers.length !== guests ||
                         booking.hotel.isPending
                       }
                       onClick={() => {
                         if (!isAuthenticated) {
                           toast.error("Please login to continue");
                           navigate("/auth");
+                          return;
+                        }
+                        if (checkIn < today || checkOut <= checkIn) {
+                          toast.error("Invalid check-in or check-out date");
+                          return;
+                        }
+                        if(travellers.length !== guests){
+                          toast.error("Please fill all travellers details");
                           return;
                         }
                         booking.hotel.mutate(
@@ -290,6 +335,7 @@ export default function HotelDetail() {
                             check_out: checkOut,
                             rooms_count: roomsCount,
                             guests,
+                            travellers,
                           },
                           {
                             onSuccess: () => {

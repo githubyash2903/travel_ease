@@ -10,9 +10,13 @@ import { useFlight } from "@/hooks/useFlights";
 import { formatIST } from "@/utils/time";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBooking } from "@/hooks/useBookings";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import {
+  Traveller,
+  TravellersForm,
+} from "@/components/features/Bookings/TravellersForm";
 
 type SearchData = {
   from?: string;
@@ -24,12 +28,23 @@ type SearchData = {
 
 export default function FlightDetail() {
   const { id } = useParams();
-    const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [seats, setSeats] = useState<number | "">("");
+  const [travellers, setTravellers] = useState<Traveller[]>([]);
   const booking = useBooking();
 
   const { data: flight, isLoading } = useFlight({}, id);
+
+  useEffect(() => {
+    setTravellers((prev) => prev.slice(0, seats || 0));
+    if (seats && travellers.length < seats) {
+      setTravellers((prev) => [
+        ...prev,
+        ...Array.from({ length: seats - prev.length }).map(() => ({})),
+      ]);
+    }
+  }, [seats]);
   if (isLoading) {
     return <Skeleton className="h-[50vh] w-full rounded-md" />;
   }
@@ -122,7 +137,11 @@ export default function FlightDetail() {
               onChange={(e) => setSeats(Number(e.target.value))}
             />
           </div>
-
+          <TravellersForm
+            count={Number(seats)}
+            value={travellers}
+            onChange={setTravellers}
+          />
           <Separator />
 
           <div className="flex justify-between font-semibold">
@@ -132,17 +151,24 @@ export default function FlightDetail() {
 
           <Button
             className="w-full"
-            disabled={!seats || booking?.flight?.isPending}
+            disabled={
+              !seats || travellers.length !== seats || booking.flight.isPending
+            }
             onClick={() => {
               if (!isAuthenticated) {
                 toast.error("Please login to continue");
                 navigate("/auth");
                 return;
               }
+              if (travellers.length !== seats) {
+                toast.error("Please fill all travellers details");
+                return;
+              }
               booking.flight.mutate(
                 {
                   flight_id: flight.id,
                   seats,
+                  travellers,
                 },
                 {
                   onSuccess: () => {

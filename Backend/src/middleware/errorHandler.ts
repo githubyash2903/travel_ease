@@ -1,19 +1,26 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../utils/errors';
 
 export function errorHandler(
-  err: unknown,
+  err: any,
   _req: Request,
   res: Response,
+  _next: NextFunction
 ) {
+  // Zod validation error
   if (err instanceof ZodError) {
     return res.status(400).json({
       success: false,
-      message: err.issues[0]?.message ?? 'Invalid request payload',
+      message: 'Validation error',
+      errors: err.errors.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      })),
     });
   }
 
+  // Custom app error
   if (err instanceof AppError) {
     return res.status(err.status).json({
       success: false,
@@ -21,9 +28,10 @@ export function errorHandler(
     });
   }
 
+  // Fallback
   console.error(err);
   return res.status(500).json({
     success: false,
-    message: 'Internal Server Error',
+    message: 'Internal server error',
   });
 }

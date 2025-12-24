@@ -1,6 +1,7 @@
 import pool from "../../database/db";
 import { AppError } from "../../utils/errors";
 
+
 export async function listAllBookings(query: any) {
   const clauses: string[] = [];
   const values: any[] = [];
@@ -18,21 +19,50 @@ export async function listAllBookings(query: any) {
 
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
   const limit = Math.min(Number(query.limit) || 5, 20);
+
   const { rows } = await pool.query(
     `
     SELECT
       b.id,
       b.booking_type,
       b.status,
+      b.base_amount,
+      b.taxes,
       b.total_amount,
-      b.user_id,
       b.created_at,
+      b.updated_at,
 
-      u.name   AS user_name,
-      u.email  AS user_email
+      -- user
+      u.id    AS user_id,
+      u.name  AS user_name,
+      u.email AS user_email,
+      u.phone_country_code,
+      u.phone_number,
+
+      -- travellers
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'full_name', t.full_name,
+            'age', t.age,
+            'gender', t.gender,
+            'id_proof_type', t.id_proof_type,
+            'id_proof_number', t.id_proof_number
+          )
+        ) FILTER (WHERE t.id IS NOT NULL),
+        '[]'
+      ) AS travellers
+
     FROM bookings b
     JOIN users u ON u.id = b.user_id
+    LEFT JOIN booking_travellers t ON t.booking_id = b.id
+
     ${where}
+
+    GROUP BY
+      b.id,
+      u.id
+
     ORDER BY b.created_at DESC
     LIMIT ${limit}
     `,
@@ -40,6 +70,44 @@ export async function listAllBookings(query: any) {
   );
 
   return rows;
+}
+
+export async function getBookingWithTravellers(id: string) {
+  const { rows } = await pool.query(
+    `
+    SELECT
+      b.*,
+
+      u.id    AS user_id,
+      u.name  AS user_name,
+      u.email AS user_email,
+      u.phone_country_code,
+      u.phone_number,
+
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'full_name', t.full_name,
+            'age', t.age,
+            'gender', t.gender,
+            'id_proof_type', t.id_proof_type,
+            'id_proof_number', t.id_proof_number
+          )
+        ) FILTER (WHERE t.id IS NOT NULL),
+        '[]'
+      ) AS travellers
+
+    FROM bookings b
+    JOIN users u ON u.id = b.user_id
+    LEFT JOIN booking_travellers t ON t.booking_id = b.id
+    WHERE b.id = $1
+    GROUP BY b.id, u.id
+    `,
+    [id]
+  );
+
+  if (!rows.length) throw new AppError("Booking not found", 404);
+  return rows[0];
 }
 
 export async function getBookingById(id: string) {

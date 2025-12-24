@@ -16,12 +16,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { useProfileData } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
+import { logoutUser } from "@/api/auth";
 
 const navItems = [
   { href: "/flights", label: "Flights" },
   { href: "/hotels", label: "Hotels" },
   { href: "/holidays", label: "Holidays" },
-  // { href: "/offers", label: "Offers" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
@@ -146,7 +146,7 @@ export const Header = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/profile/bookings">My Bookings</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={logoutUser}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
