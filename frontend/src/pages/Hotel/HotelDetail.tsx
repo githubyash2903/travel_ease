@@ -19,7 +19,7 @@ import {
   Check,
   Info,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useHotel } from "@/hooks/useHotels";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,34 +41,74 @@ const amenityIcons: Record<string, any> = {
   conference_room: MapPin,
   parking: Car,
 };
+
+const diffNights = (a: string, b: string) =>
+  Math.max(
+    0,
+    Math.ceil(
+      (new Date(b).getTime() - new Date(a).getTime()) / 86400000
+    )
+  );
+
 export default function HotelDetail() {
-  const [selectedImage, setSelectedImage] = useState(0);
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [params] = useSearchParams();
+
+  const [selectedImage, setSelectedImage] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
+
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [roomsCount, setRoomsCount] = useState<number | "">("");
-  const [guests, setGuests] = useState<number | "">("");
-  const [travellers, setTravellers] = useState<Traveller[]>([]);
+  const [roomsCount, setRoomsCount] = useState<number>(1);
+  const [guests, setGuests] = useState<number>(1);
+  const [travellers, setTravellers] = useState<Traveller[]>([{}]);
+
   const booking = useBooking();
   const { data: hotel, isLoading, isError } = useHotel({}, id);
   const { data: rooms, isLoading: isLoadingRooms } = useRooms({}, params, id);
 
-  /* keep travellers array in sync with guests */
+  const today = new Date().toISOString().slice(0, 10);
+
+  const maxRoomsAllowed = selectedRoom?.total_rooms ?? 0;
+  const maxGuestsAllowed = selectedRoom
+    ? roomsCount * selectedRoom.max_occupancy
+    : 0;
+
   useEffect(() => {
-    setTravellers((prev) => prev.slice(0, guests || 0));
-    if (guests && travellers.length < guests) {
+    if (!selectedRoom) return;
+    setRoomsCount(1);
+    setGuests(1);
+    setTravellers([{}]);
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    if (guests > maxGuestsAllowed) {
+      setGuests(maxGuestsAllowed);
+    }
+    setTravellers((prev) => prev.slice(0, guests));
+    if (travellers.length < guests) {
       setTravellers((prev) => [
         ...prev,
         ...Array.from({ length: guests - prev.length }).map(() => ({})),
       ]);
     }
-  }, [guests]);
-  // add near top of component
-  const today = new Date().toISOString().slice(0, 10);
+  }, [guests, maxGuestsAllowed]);
+
+  const nights = useMemo(
+    () => (checkIn && checkOut ? diffNights(checkIn, checkOut) : 0),
+    [checkIn, checkOut]
+  );
+
+  const totalAmount = useMemo(() => {
+    if (!selectedRoom || !nights) return 0;
+    return (
+      Number(selectedRoom.price_per_night) *
+      roomsCount *
+      nights
+    );
+  }, [selectedRoom, roomsCount, nights]);
 
   if (isLoading) return <Skeleton className="h-40 m-8" />;
   if (isError) return <ErrorState message="Hotel not found" />;
@@ -76,286 +116,268 @@ export default function HotelDetail() {
   return (
     <div className="min-h-screen w-full flex flex-col">
       <main className="flex-1 pb-12">
-        {/* Image Gallery */}
+        {/* Images */}
         <section className="container py-6">
           <div className="grid grid-cols-4 gap-4">
-            <div className="col-span-4 md:col-span-3 row-span-2">
+            <div className="col-span-4 md:col-span-3">
               <img
                 src={hotel?.images[selectedImage]?.url}
                 alt={hotel?.name}
-                className="w-full h-[400px] md:h-[500px] object-cover rounded-lg"
+                className="w-full h-[450px] object-cover rounded-lg"
               />
             </div>
-            {hotel?.images.slice(0, 3).map((image, index) => (
-              <div
-                key={index}
-                className="hidden md:block cursor-pointer"
-                onClick={() => setSelectedImage(index + 1)}
-              >
-                <img
-                  src={image?.url}
-                  alt={`${hotel?.name} ${index + 2}`}
-                  className="w-full h-[160px] object-cover rounded-lg hover:opacity-80 transition-opacity"
-                />
-              </div>
+            {hotel?.images.slice(0, 3).map((img, i) => (
+              <img
+                key={i}
+                src={img.url}
+                onClick={() => setSelectedImage(i + 1)}
+                className="hidden md:block h-[140px] w-full object-cover rounded-lg cursor-pointer"
+              />
             ))}
           </div>
         </section>
 
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Header */}
-              <div>
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2">{hotel?.name}</h1>
-                    <div className="flex items-center gap-4 text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>
-                          {hotel?.city},{hotel?.state}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="gap-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    {hotel?.rating} ({hotel?.rating_count} reviews)
-                  </Badge>
-                </div>
-                <p className="text-muted-foreground mt-4">
-                  {hotel?.description}
-                </p>
-              </div>
-
-              <Separator />
-
-              {/* Amenities */}
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(hotel?.amenities)?.map(([amenity], index) => {
-                    const Icon =
-                      amenity in amenityIcons ? amenityIcons[amenity] : Info;
-
-                    return (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <span className="text-sm">{amenity}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Room Types */}
-              <div className="flex flex-col  gap-4">
-                <h2 className="text-2xl font-semibold mb-4 ">Room Types</h2>
-                {isLoadingRooms && <Skeleton className="h-40 m-8" />}
-                {(isError || rooms?.length === 0) && (
-                  <ErrorState message="Rooms not found" />
-                )}
-
-                {(rooms || [])?.map((room, index) => (
-                  <div key={index}>
-                    <Card>
-                      <CardHeader>
-                        <div className="flex items-start justify-between lg:flex-row gap-4 flex-col">
-                          <div>
-                            <CardTitle>{room?.type}</CardTitle>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                              <span>{room?.area_sqft} sq ft</span>
-                              {room?.beds?.length > 0 && (
-                                <>
-                                  <span>•</span>
-                                  <span>
-                                    {room?.beds?.map((bed) => {
-                                      return `${bed.count} ${bed.type} bed`;
-                                    })}
-                                  </span>
-                                </>
-                              )}
-                              <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <Users className="h-4 w-4" />
-                                {room?.max_occupancy}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-primary">
-                              ₹{room?.price_per_night}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              per night
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <p className="font-medium">Room Features:</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(room?.amenities || {}).map(
-                              ([feature], idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center gap-2 text-sm"
-                                >
-                                  <Check className="h-4 w-4 text-green-600" />
-                                  <span>{feature}</span>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                      <CardFooter>
-                        <Button
-                          className="mt-4 w-full"
-                          variant={
-                            selectedRoom?.id === room.id ? "default" : "outline"
-                          }
-                          onClick={() => setSelectedRoom(room)}
-                        >
-                          {selectedRoom?.id === room.id
-                            ? "Selected"
-                            : "Select Room"}
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </div>
-                ))}
+        <div className="container grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT */}
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold">{hotel?.name}</h1>
+              <div className="flex items-center gap-4 text-muted-foreground mt-2">
+                <MapPin className="h-4 w-4" />
+                {hotel?.city}, {hotel?.state}
               </div>
             </div>
-            {/* <Separator /> */}
-            {/* Book hotel room form */}
-            <div className="lg:col-span-1">
-              {selectedRoom && (
-                <Card className="mt-6 sticky top-20">
+
+            <Separator />
+
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.keys(hotel?.amenities || {}).map((a, i) => {
+                  const Icon = amenityIcons[a] ?? Info;
+                  return (
+                    <div key={i} className="flex items-center gap-2">
+                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-sm">{a}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Room Types</h2>
+              {isLoadingRooms && <Skeleton className="h-40" />}
+              {(rooms || []).map((room: any) => (
+                <Card key={room.id}>
                   <CardHeader>
-                    <CardTitle>Book {selectedRoom.type}</CardTitle>
+                    <div className="flex justify-between">
+                      <CardTitle>{room.type}</CardTitle>
+                      <div className="text-right">
+                        <div className="text-xl font-bold">
+                          ₹{room.price_per_night}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          per night
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 text-sm text-muted-foreground mt-2">
+                      <span>{room.area_sqft} sq ft</span>
+                      <span className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        {room.max_occupancy} / room
+                      </span>
+                      <span>{room.total_rooms} rooms available</span>
+                    </div>
                   </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    {/* Check-in */}
-                    <div>
-                      <label className="text-sm font-medium">Check-in *</label>
-                      <input
-                        type="date"
-                        min={today}
-                        className="w-full px-3 py-2 border rounded-md"
-                        value={checkIn}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setCheckIn(value);
-
-                          // reset checkout if invalid
-                          if (checkOut && checkOut <= value) {
-                            setCheckOut("");
-                          }
-                        }}
-                      />
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {Object.keys(room.amenities || {}).map((a, i) => (
+                        <div key={i} className="flex gap-2 items-center">
+                          <Check className="h-4 w-4 text-green-600" />
+                          {a}
+                        </div>
+                      ))}
                     </div>
-
-                    {/* Check-out */}
-                    <div>
-                      <label className="text-sm font-medium">Check-out *</label>
-                      <input
-                        type="date"
-                        min={checkIn || today}
-                        className="w-full px-3 py-2 border rounded-md"
-                        value={checkOut}
-                        disabled={!checkIn}
-                        onChange={(e) => setCheckOut(e.target.value)}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium">Rooms *</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-full px-3 py-2 border rounded-md"
-                        value={roomsCount}
-                        onChange={(e) => setRoomsCount(Number(e.target.value))}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium">Guests *</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-full px-3 py-2 border rounded-md"
-                        value={guests}
-                        onChange={(e) => setGuests(Number(e.target.value))}
-                      />
-                    </div>
-                    <TravellersForm
-                      count={Number(guests)}
-                      value={travellers}
-                      onChange={setTravellers}
-                    />
+                  </CardContent>
+                  <CardFooter>
                     <Button
                       className="w-full"
-                      disabled={
-                        !checkIn ||
-                        !checkOut ||
-                        !roomsCount ||
-                        !guests ||
-                        travellers.length !== guests ||
-                        booking.hotel.isPending
+                      variant={
+                        selectedRoom?.id === room.id
+                          ? "default"
+                          : "outline"
                       }
-                      onClick={() => {
-                        if (!isAuthenticated) {
-                          toast.error("Please login to continue");
-                          navigate("/auth");
-                          return;
-                        }
-                        if (checkIn < today || checkOut <= checkIn) {
-                          toast.error("Invalid check-in or check-out date");
-                          return;
-                        }
-                        if(travellers.length !== guests){
-                          toast.error("Please fill all travellers details");
-                          return;
-                        }
-                        booking.hotel.mutate(
-                          {
-                            hotel_id: hotel.id,
-                            room_id: selectedRoom.id,
-                            check_in: checkIn,
-                            check_out: checkOut,
-                            rooms_count: roomsCount,
-                            guests,
-                            travellers,
-                          },
-                          {
-                            onSuccess: () => {
-                              toast.success(
-                                "Hotel booking request successfully, we'll get back to you."
-                              );
-                              navigate("/profile/bookings");
-                            },
-                          }
-                        );
-                      }}
+                      onClick={() => setSelectedRoom(room)}
                     >
-                      {booking.hotel.isPending
-                        ? "Booking..."
-                        : "Request Booking"}
+                      {selectedRoom?.id === room.id
+                        ? "Selected"
+                        : "Select Room"}
                     </Button>
-                  </CardContent>
+                  </CardFooter>
                 </Card>
-              )}
+              ))}
             </div>
+          </div>
+
+          {/* RIGHT */}
+          <div className="lg:col-span-1">
+            {selectedRoom && (
+              <Card className="sticky top-20">
+                <CardHeader>
+                  <CardTitle>Book {selectedRoom.type}</CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Check-in</label>
+                    <input
+                      type="date"
+                      min={today}
+                      className="w-full border px-3 py-2 rounded-md"
+                      value={checkIn}
+                      onChange={(e) => {
+                        setCheckIn(e.target.value);
+                        if (checkOut && checkOut <= e.target.value) {
+                          setCheckOut("");
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Check-out</label>
+                    <input
+                      type="date"
+                      min={checkIn || today}
+                      disabled={!checkIn}
+                      className="w-full border px-3 py-2 rounded-md"
+                      value={checkOut}
+                      onChange={(e) => setCheckOut(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">
+                      Rooms (max {maxRoomsAllowed})
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={maxRoomsAllowed}
+                      value={roomsCount}
+                      className="w-full border px-3 py-2 rounded-md"
+                      onChange={(e) =>
+                        setRoomsCount(
+                          Math.min(
+                            maxRoomsAllowed,
+                            Math.max(1, Number(e.target.value))
+                          )
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">
+                      Guests (max {maxGuestsAllowed})
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={maxGuestsAllowed}
+                      value={guests}
+                      className="w-full border px-3 py-2 rounded-md"
+                      onChange={(e) =>
+                        setGuests(
+                          Math.min(
+                            maxGuestsAllowed,
+                            Math.max(1, Number(e.target.value))
+                          )
+                        )
+                      }
+                    />
+                  </div>
+
+                  <TravellersForm
+                    count={guests}
+                    value={travellers}
+                    onChange={setTravellers}
+                  />
+
+                  <Separator />
+
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span>Price / Night</span>
+                      <span>₹{selectedRoom.price_per_night}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Nights</span>
+                      <span>{nights}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Rooms</span>
+                      <span>{roomsCount}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold">
+                      <span>Total</span>
+                      <span>₹{totalAmount}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    className="w-full"
+                    disabled={
+                      !checkIn ||
+                      !checkOut ||
+                      nights === 0 ||
+                      travellers.length !== guests ||
+                      booking.hotel.isPending
+                    }
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast.error("Please login to continue");
+                        navigate("/auth");
+                        return;
+                      }
+                      if (guests > maxGuestsAllowed) {
+                        toast.error(
+                          `Max ${maxGuestsAllowed} guests allowed`
+                        );
+                        return;
+                      }
+                      booking.hotel.mutate(
+                        {
+                          hotel_id: hotel.id,
+                          room_id: selectedRoom.id,
+                          check_in: checkIn,
+                          check_out: checkOut,
+                          rooms_count: roomsCount,
+                          guests,
+                          travellers,
+                        },
+                        {
+                          onSuccess: () => {
+                            toast.success(
+                              "Hotel booking request submitted"
+                            );
+                            navigate("/profile/bookings");
+                          },
+                        }
+                      );
+                    }}
+                  >
+                    {booking.hotel.isPending
+                      ? "Booking..."
+                      : "Request Booking"}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

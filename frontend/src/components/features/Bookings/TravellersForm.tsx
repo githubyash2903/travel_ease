@@ -29,7 +29,7 @@ export function TravellersForm({ count, value, onChange }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Traveller Details</CardTitle>
+        <CardTitle>Personal Details</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">

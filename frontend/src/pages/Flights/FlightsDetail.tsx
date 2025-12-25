@@ -10,7 +10,7 @@ import { useFlight } from "@/hooks/useFlights";
 import { formatIST } from "@/utils/time";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBooking } from "@/hooks/useBookings";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -30,7 +30,7 @@ export default function FlightDetail() {
   const { id } = useParams();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [seats, setSeats] = useState<number | "">("");
+  const [seats, setSeats] = useState<number | "">(1);
   const [travellers, setTravellers] = useState<Traveller[]>([]);
   const booking = useBooking();
 
@@ -45,6 +45,10 @@ export default function FlightDetail() {
       ]);
     }
   }, [seats]);
+  const totalAmount = useMemo(() => {
+    if (!flight?.price || !seats) return 0;
+    return Number(seats) * Number(flight.price);
+  }, [seats, flight?.price]);
   if (isLoading) {
     return <Skeleton className="h-[50vh] w-full rounded-md" />;
   }
@@ -134,7 +138,10 @@ export default function FlightDetail() {
               min={1}
               className="w-full px-3 py-2 border rounded-md"
               value={seats}
-              onChange={(e) => setSeats(Number(e.target.value))}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setSeats(Number.isFinite(v) && v > 0 ? v : "");
+              }}
             />
           </div>
           <TravellersForm
@@ -148,7 +155,16 @@ export default function FlightDetail() {
             <span>Price / Seat</span>
             <span>₹{flight.price}</span>
           </div>
+          <div className="flex justify-between">
+            <span>Persons</span>
+            <span>{seats}</span>
+          </div>
+          <Separator />
 
+          <div className="flex justify-between text-lg font-semibold">
+            <span>Total Amount</span>
+            <span>₹{totalAmount}</span>
+          </div>
           <Button
             className="w-full"
             disabled={
